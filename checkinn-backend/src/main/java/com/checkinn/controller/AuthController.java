@@ -1,5 +1,7 @@
 package com.checkinn.controller;
 
+import com.checkinn.dto.LoginRequest;
+import com.checkinn.dto.LoginResponse;
 import com.checkinn.dto.RegisterRequest;
 import com.checkinn.entity.User;
 import com.checkinn.service.AuthService;
@@ -19,5 +21,10 @@ public class AuthController {
     @PostMapping("/register")
     public User register(@RequestBody RegisterRequest request) {
         return authService.register(request);
+    }
+
+    @PostMapping("/login")
+    public LoginResponse login(@RequestBody LoginRequest request) {
+        return authService.login(request);
     }
 }
