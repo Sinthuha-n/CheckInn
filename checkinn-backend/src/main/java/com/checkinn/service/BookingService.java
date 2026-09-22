@@ -147,4 +147,46 @@ public class BookingService {
                 booking.getStatus()
         );
     }
+
+    public List<BookingResponse> getMyBookings(String userEmail) {
+
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return bookingRepository.findByUserId(user.getId())
+                .stream()
+                .map(this::convertToResponse)
+                .toList();
+    }
+
+    public BookingResponse cancelBooking(Long bookingId, String userEmail) {
+
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        if (!booking.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("You cannot cancel this booking");
+        }
+
+        if ("CANCELLED".equals(booking.getStatus())) {
+            throw new RuntimeException("Booking is already cancelled");
+        }
+
+        booking.setStatus("CANCELLED");
+
+        Booking savedBooking = bookingRepository.save(booking);
+
+        return convertToResponse(savedBooking);
+    }
+
+    public List<BookingResponse> getAllBookings() {
+
+        return bookingRepository.findAll()
+                .stream()
+                .map(this::convertToResponse)
+                .toList();
+    }
 }
