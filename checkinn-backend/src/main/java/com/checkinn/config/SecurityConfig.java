@@ -8,6 +8,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 
 @Configuration
 public class SecurityConfig {
@@ -38,12 +39,23 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
 
-                        .requestMatchers("/api/rooms/**")
+                        .requestMatchers("/api/auth/**")
+                        .permitAll()
+
+                        .requestMatchers(HttpMethod.POST, "/api/bookings")
                         .hasAnyRole("USER", "ADMIN")
 
-                        .requestMatchers("/api/bookings/**")
+                        .requestMatchers(HttpMethod.GET, "/api/bookings/my")
+                        .hasAnyRole("USER", "ADMIN")
+
+                        .requestMatchers(HttpMethod.PUT, "/api/bookings/*/cancel")
+                        .hasAnyRole("USER", "ADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/api/bookings")
+                        .hasRole("ADMIN")
+
+                        .requestMatchers("/api/rooms/**")
                         .hasAnyRole("USER", "ADMIN")
 
                         .anyRequest()

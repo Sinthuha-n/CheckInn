@@ -6,6 +6,8 @@ import com.checkinn.service.BookingService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/bookings")
 @CrossOrigin(origins = "http://localhost:5173")
@@ -13,9 +15,7 @@ public class BookingController {
 
     private final BookingService bookingService;
 
-    public BookingController(
-            BookingService bookingService
-    ) {
+    public BookingController(BookingService bookingService) {
         this.bookingService = bookingService;
     }
 
@@ -25,11 +25,36 @@ public class BookingController {
             Authentication authentication
     ) {
 
-        String email = authentication.getName();
-
         return bookingService.createBooking(
                 request,
-                email
+                authentication.getName()
         );
+    }
+
+    @GetMapping("/my")
+    public List<BookingResponse> getMyBookings(
+            Authentication authentication
+    ) {
+
+        return bookingService.getMyBookings(
+                authentication.getName()
+        );
+    }
+
+    @PutMapping("/{id}/cancel")
+    public BookingResponse cancelBooking(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+
+        return bookingService.cancelBooking(
+                id,
+                authentication.getName()
+        );
+    }
+
+    @GetMapping
+    public List<BookingResponse> getAllBookings() {
+        return bookingService.getAllBookings();
     }
 }
