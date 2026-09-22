@@ -43,6 +43,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/rooms/**")
                         .hasAnyRole("USER", "ADMIN")
 
+                        .requestMatchers("/api/bookings/**")
+                        .hasAnyRole("USER", "ADMIN")
+
                         .anyRequest()
                         .authenticated()
                 )
