@@ -38,12 +38,10 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
-
-                        .requestMatchers("/api/auth/**")
-                        .permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
 
                         .requestMatchers("/api/rooms/**")
-                        .authenticated()
+                        .hasAnyRole("USER", "ADMIN")
 
                         .anyRequest()
                         .authenticated()
