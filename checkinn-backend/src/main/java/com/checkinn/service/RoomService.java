@@ -4,6 +4,7 @@ import com.checkinn.entity.Room;
 import com.checkinn.repository.RoomRepository;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.time.LocalDate;
 
@@ -72,6 +73,33 @@ public class RoomService {
         return roomRepository.findAvailableRooms(
                 checkIn,
                 checkOut
+        );
+    }
+
+    public List<Room> searchRooms(
+            String roomType,
+            Integer capacity,
+            BigDecimal maxPrice
+    ) {
+
+        if (capacity != null && capacity <= 0) {
+            throw new RuntimeException(
+                    "Capacity must be greater than zero"
+            );
+        }
+
+        if (maxPrice != null &&
+                maxPrice.compareTo(BigDecimal.ZERO) <= 0) {
+
+            throw new RuntimeException(
+                    "Maximum price must be greater than zero"
+            );
+        }
+
+        return roomRepository.searchRooms(
+                roomType,
+                capacity,
+                maxPrice
         );
     }
 }
