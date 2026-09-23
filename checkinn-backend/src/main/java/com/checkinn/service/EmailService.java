@@ -1,30 +1,53 @@
 package com.checkinn.service;
 
 import com.checkinn.entity.Booking;
-import org.springframework.mail.SimpleMailMessage;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
 
 @Service
 public class EmailService {
 
     private final JavaMailSender mailSender;
+    private final PdfService pdfService;
 
-    public EmailService(JavaMailSender mailSender) {
+    public EmailService(
+            JavaMailSender mailSender,
+            PdfService pdfService
+    ) {
         this.mailSender = mailSender;
+        this.pdfService = pdfService;
     }
 
     public void sendBookingConfirmation(
             String email,
             Booking booking
-    ) {
+    ) throws MessagingException, IOException {
 
-        SimpleMailMessage message = new SimpleMailMessage();
+        byte[] pdfBytes =
+                pdfService.generateBookingTicket(booking);
 
-        message.setTo(email);
-        message.setSubject("CheckINN Booking Confirmation");
+        MimeMessage message =
+                mailSender.createMimeMessage();
 
-        message.setText(
+        MimeMessageHelper helper =
+                new MimeMessageHelper(
+                        message,
+                        true
+                );
+
+        helper.setTo(email);
+
+        helper.setSubject(
+                "CheckINN Booking Confirmation"
+        );
+
+        helper.setText(
                 "Your booking has been confirmed.\n\n" +
                         "Booking ID: " + booking.getId() + "\n" +
                         "Room: " + booking.getRoom().getRoomNumber() + "\n" +
@@ -33,7 +56,13 @@ public class EmailService {
                         "Check-out: " + booking.getCheckOutDate() + "\n" +
                         "Guests: " + booking.getNumberOfGuests() + "\n" +
                         "Total Price: LKR " + booking.getTotalPrice() + "\n" +
-                        "Status: " + booking.getStatus()
+                        "Status: " + booking.getStatus() + "\n\n" +
+                        "Your booking ticket is attached."
+        );
+
+        helper.addAttachment(
+                "booking-" + booking.getId() + ".pdf",
+                new ByteArrayResource(pdfBytes)
         );
 
         mailSender.send(message);
