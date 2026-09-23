@@ -40,27 +40,51 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers("/api/auth/**")
+                // Authentication APIs
+                .requestMatchers("/api/auth/**")
+                .permitAll()
+
+                // Room viewing - USER + ADMIN
+                .requestMatchers(HttpMethod.GET, "/api/rooms/**")
+                .hasAnyRole("USER", "ADMIN")
+
+                // Room creation - ADMIN only
+                .requestMatchers(HttpMethod.POST, "/api/rooms")
+                .hasRole("ADMIN")
+
+                // Room update - ADMIN only
+                .requestMatchers(HttpMethod.PUT, "/api/rooms/**")
+                .hasRole("ADMIN")
+
+                // Room deletion - ADMIN only
+                .requestMatchers(HttpMethod.DELETE, "/api/rooms/**")
+                .hasRole("ADMIN")
+
+                // Booking creation
+                .requestMatchers(HttpMethod.POST, "/api/bookings")
+                .hasAnyRole("USER", "ADMIN")
+
+                // User's bookings
+                .requestMatchers(HttpMethod.GET, "/api/bookings/my")
+                .hasAnyRole("USER", "ADMIN")
+
+                // Cancel booking
+                .requestMatchers(HttpMethod.PUT, "/api/bookings/*/cancel")
+                .hasAnyRole("USER", "ADMIN")
+
+                // Admin - all bookings
+                .requestMatchers(HttpMethod.GET, "/api/bookings")
+                .hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/api/reviews/room/**")
                         .permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/api/bookings")
+                        .requestMatchers(HttpMethod.POST, "/api/reviews")
                         .hasAnyRole("USER", "ADMIN")
-
-                        .requestMatchers(HttpMethod.GET, "/api/bookings/my")
-                        .hasAnyRole("USER", "ADMIN")
-
-                        .requestMatchers(HttpMethod.PUT, "/api/bookings/*/cancel")
-                        .hasAnyRole("USER", "ADMIN")
-
-                        .requestMatchers(HttpMethod.GET, "/api/bookings")
-                        .hasRole("ADMIN")
-
-                        .requestMatchers("/api/rooms/**")
-                        .hasAnyRole("USER", "ADMIN")
-
-                        .anyRequest()
-                        .authenticated()
-                )
+                        
+                .anyRequest()
+                .authenticated()
+        )
 
                 .addFilterBefore(
                         jwtAuthFilter,
