@@ -132,14 +132,15 @@ public class BookingService {
         }
     }
 
-    private BookingResponse convertToResponse(
-            Booking booking
-    ) {
+    private BookingResponse convertToResponse(Booking booking) {
 
         return new BookingResponse(
                 booking.getId(),
+                booking.getUser().getName(),
                 booking.getRoom().getId(),
                 booking.getRoom().getRoomNumber(),
+                booking.getRoom().getRoomType(),
+                booking.getRoom().getPricePerNight(),
                 booking.getCheckInDate(),
                 booking.getCheckOutDate(),
                 booking.getNumberOfGuests(),
@@ -188,5 +189,29 @@ public class BookingService {
                 .stream()
                 .map(this::convertToResponse)
                 .toList();
+    }
+
+    public Booking getBookingForUser(
+            Long bookingId,
+            String userEmail
+    ) {
+
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found")
+                );
+
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() ->
+                        new RuntimeException("Booking not found")
+                );
+
+        if (!booking.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException(
+                    "You cannot access this booking"
+            );
+        }
+
+        return booking;
     }
 }
