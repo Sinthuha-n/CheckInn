@@ -4,6 +4,7 @@ import com.checkinn.entity.Room;
 import com.checkinn.service.RoomService;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -53,6 +54,20 @@ public class RoomController {
         return roomService.getAvailableRooms(
                 checkIn,
                 checkOut
+        );
+    }
+
+    @GetMapping("/search")
+    public List<Room> searchRooms(
+            @RequestParam(required = false) String roomType,
+            @RequestParam(required = false) Integer capacity,
+            @RequestParam(required = false) BigDecimal maxPrice
+    ) {
+
+        return roomService.searchRooms(
+                roomType,
+                capacity,
+                maxPrice
         );
     }
 }
