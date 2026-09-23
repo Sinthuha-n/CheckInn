@@ -12,6 +12,7 @@ import com.checkinn.repository.BookingRepository;
 import com.checkinn.repository.RoomRepository;
 import com.checkinn.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import com.checkinn.exception.ForbiddenException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -196,7 +197,7 @@ public class BookingService {
                 );
 
         if (!booking.getUser().getId().equals(user.getId())) {
-            throw new BadRequestException(
+            throw new ForbiddenException(
                     "You cannot cancel this booking"
             );
         }
@@ -239,7 +240,7 @@ public class BookingService {
                 );
 
         if (!booking.getUser().getId().equals(user.getId())) {
-            throw new BadRequestException(
+            throw new ForbiddenException(
                     "You cannot access this booking"
             );
         }
