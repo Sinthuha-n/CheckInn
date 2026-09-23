@@ -5,6 +5,8 @@ import com.checkinn.dto.LoginResponse;
 import com.checkinn.dto.RegisterRequest;
 import com.checkinn.dto.RegisterResponse;
 import com.checkinn.entity.User;
+import com.checkinn.exception.BadRequestException;
+import com.checkinn.exception.ConflictException;
 import com.checkinn.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -29,7 +31,9 @@ public class AuthService {
     public RegisterResponse register(RegisterRequest request) {
 
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already registered");
+            throw new ConflictException(
+                    "Email already registered"
+            );
         }
 
         User user = new User();
@@ -55,14 +59,16 @@ public class AuthService {
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() ->
-                        new RuntimeException("Invalid email or password")
+                        new BadRequestException(
+                                "Invalid email or password"
+                        )
                 );
 
         if (!passwordEncoder.matches(
                 request.getPassword(),
                 user.getPassword()
         )) {
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Invalid email or password"
             );
         }
