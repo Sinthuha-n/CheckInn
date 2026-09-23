@@ -21,15 +21,18 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     public BookingService(
             BookingRepository bookingRepository,
             RoomRepository roomRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            EmailService emailService
     ) {
         this.bookingRepository = bookingRepository;
         this.roomRepository = roomRepository;
         this.userRepository = userRepository;
+        this.emailService = emailService;
     }
 
     public BookingResponse createBooking(
@@ -83,6 +86,11 @@ public class BookingService {
 
         Booking savedBooking =
                 bookingRepository.save(booking);
+
+        emailService.sendBookingConfirmation(
+                user.getEmail(),
+                savedBooking
+        );
 
         return convertToResponse(savedBooking);
     }
@@ -214,4 +222,5 @@ public class BookingService {
 
         return booking;
     }
+
 }
