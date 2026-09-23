@@ -4,6 +4,7 @@ import com.checkinn.entity.Room;
 import com.checkinn.service.RoomService;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -42,5 +43,16 @@ public class RoomController {
     @DeleteMapping("/{id}")
     public void deleteRoom(@PathVariable Long id) {
         roomService.deleteRoom(id);
+    }
+
+    @GetMapping("/available")
+    public List<Room> getAvailableRooms(
+            @RequestParam LocalDate checkIn,
+            @RequestParam LocalDate checkOut
+    ) {
+        return roomService.getAvailableRooms(
+                checkIn,
+                checkOut
+        );
     }
 }
