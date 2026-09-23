@@ -3,17 +3,18 @@ package com.checkinn.service;
 import com.checkinn.dto.LoginRequest;
 import com.checkinn.dto.LoginResponse;
 import com.checkinn.dto.RegisterRequest;
+import com.checkinn.dto.RegisterResponse;
 import com.checkinn.entity.User;
 import com.checkinn.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.checkinn.dto.RegisterResponse;
 
 @Service
 public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public AuthService(
             UserRepository userRepository,
@@ -61,10 +62,13 @@ public class AuthService {
                 request.getPassword(),
                 user.getPassword()
         )) {
-            throw new RuntimeException("Invalid email or password");
+            throw new RuntimeException(
+                    "Invalid email or password"
+            );
         }
 
-        String token = jwtService.generateToken(user.getEmail());
+        String token =
+                jwtService.generateToken(user.getEmail());
 
         return new LoginResponse(
                 user.getId(),
@@ -74,6 +78,4 @@ public class AuthService {
                 token
         );
     }
-
-    private final JwtService jwtService;
 }

@@ -3,10 +3,10 @@ package com.checkinn.controller;
 import com.checkinn.dto.LoginRequest;
 import com.checkinn.dto.LoginResponse;
 import com.checkinn.dto.RegisterRequest;
-import com.checkinn.entity.User;
-import com.checkinn.service.AuthService;
-import org.springframework.web.bind.annotation.*;
 import com.checkinn.dto.RegisterResponse;
+import com.checkinn.service.AuthService;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -21,13 +21,15 @@ public class AuthController {
 
     @PostMapping("/register")
     public RegisterResponse register(
-            @RequestBody RegisterRequest request
+            @Valid @RequestBody RegisterRequest request
     ) {
         return authService.register(request);
     }
 
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest request) {
+    public LoginResponse login(
+            @Valid @RequestBody LoginRequest request
+    ) {
         return authService.login(request);
     }
 }
