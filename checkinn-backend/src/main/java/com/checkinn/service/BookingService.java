@@ -5,6 +5,9 @@ import com.checkinn.dto.BookingResponse;
 import com.checkinn.entity.Booking;
 import com.checkinn.entity.Room;
 import com.checkinn.entity.User;
+import com.checkinn.exception.BadRequestException;
+import com.checkinn.exception.ConflictException;
+import com.checkinn.exception.ResourceNotFoundException;
 import com.checkinn.repository.BookingRepository;
 import com.checkinn.repository.RoomRepository;
 import com.checkinn.repository.UserRepository;
@@ -42,12 +45,12 @@ public class BookingService {
 
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found")
+                        new ResourceNotFoundException("User not found")
                 );
 
         Room room = roomRepository.findById(request.getRoomId())
                 .orElseThrow(() ->
-                        new RuntimeException("Room not found")
+                        new ResourceNotFoundException("Room not found")
                 );
 
         validateBooking(request, room);
@@ -60,7 +63,7 @@ public class BookingService {
                 );
 
         if (!overlappingBookings.isEmpty()) {
-            throw new RuntimeException(
+            throw new ConflictException(
                     "Room is not available for selected dates"
             );
         }
@@ -110,7 +113,7 @@ public class BookingService {
         if (request.getCheckInDate() == null ||
                 request.getCheckOutDate() == null) {
 
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Check-in and check-out dates are required"
             );
         }
@@ -118,7 +121,7 @@ public class BookingService {
         if (!request.getCheckOutDate()
                 .isAfter(request.getCheckInDate())) {
 
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Check-out date must be after check-in date"
             );
         }
@@ -126,7 +129,7 @@ public class BookingService {
         if (request.getCheckInDate()
                 .isBefore(LocalDate.now())) {
 
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Check-in date cannot be in the past"
             );
         }
@@ -134,14 +137,14 @@ public class BookingService {
         if (request.getNumberOfGuests() == null ||
                 request.getNumberOfGuests() <= 0) {
 
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Number of guests must be greater than zero"
             );
         }
 
         if (request.getNumberOfGuests() > room.getCapacity()) {
 
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Number of guests exceeds room capacity"
             );
         }
@@ -167,7 +170,9 @@ public class BookingService {
     public List<BookingResponse> getMyBookings(String userEmail) {
 
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found")
+                );
 
         return bookingRepository.findByUserId(user.getId())
                 .stream()
@@ -175,25 +180,37 @@ public class BookingService {
                 .toList();
     }
 
-    public BookingResponse cancelBooking(Long bookingId, String userEmail) {
+    public BookingResponse cancelBooking(
+            Long bookingId,
+            String userEmail
+    ) {
 
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found")
+                );
 
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Booking not found")
+                );
 
         if (!booking.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("You cannot cancel this booking");
+            throw new BadRequestException(
+                    "You cannot cancel this booking"
+            );
         }
 
         if ("CANCELLED".equals(booking.getStatus())) {
-            throw new RuntimeException("Booking is already cancelled");
+            throw new ConflictException(
+                    "Booking is already cancelled"
+            );
         }
 
         booking.setStatus("CANCELLED");
 
-        Booking savedBooking = bookingRepository.save(booking);
+        Booking savedBooking =
+                bookingRepository.save(booking);
 
         return convertToResponse(savedBooking);
     }
@@ -213,23 +230,20 @@ public class BookingService {
 
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found")
+                        new ResourceNotFoundException("User not found")
                 );
 
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() ->
-                        new RuntimeException("Booking not found")
+                        new ResourceNotFoundException("Booking not found")
                 );
 
         if (!booking.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "You cannot access this booking"
             );
         }
 
         return booking;
     }
-
-
-
 }
