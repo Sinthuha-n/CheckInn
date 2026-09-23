@@ -5,6 +5,7 @@ import com.checkinn.repository.RoomRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.time.LocalDate;
 
 @Service
 public class RoomService {
@@ -43,5 +44,34 @@ public class RoomService {
 
     public void deleteRoom(Long id) {
         roomRepository.deleteById(id);
+    }
+
+    public List<Room> getAvailableRooms(
+            LocalDate checkIn,
+            LocalDate checkOut
+    ) {
+
+        if (checkIn == null || checkOut == null) {
+            throw new RuntimeException(
+                    "Check-in and check-out dates are required"
+            );
+        }
+
+        if (!checkOut.isAfter(checkIn)) {
+            throw new RuntimeException(
+                    "Check-out date must be after check-in date"
+            );
+        }
+
+        if (checkIn.isBefore(LocalDate.now())) {
+            throw new RuntimeException(
+                    "Check-in date cannot be in the past"
+            );
+        }
+
+        return roomRepository.findAvailableRooms(
+                checkIn,
+                checkOut
+        );
     }
 }
