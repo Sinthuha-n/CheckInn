@@ -6,6 +6,7 @@ import com.checkinn.dto.RegisterRequest;
 import com.checkinn.entity.User;
 import com.checkinn.service.AuthService;
 import org.springframework.web.bind.annotation.*;
+import com.checkinn.dto.RegisterResponse;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -19,7 +20,9 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public User register(@RequestBody RegisterRequest request) {
+    public RegisterResponse register(
+            @RequestBody RegisterRequest request
+    ) {
         return authService.register(request);
     }
 

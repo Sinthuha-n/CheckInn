@@ -7,6 +7,7 @@ import com.checkinn.entity.User;
 import com.checkinn.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.checkinn.dto.RegisterResponse;
 
 @Service
 public class AuthService {
@@ -24,7 +25,7 @@ public class AuthService {
         this.jwtService = jwtService;
     }
 
-    public User register(RegisterRequest request) {
+    public RegisterResponse register(RegisterRequest request) {
 
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already registered");
@@ -34,14 +35,19 @@ public class AuthService {
 
         user.setName(request.getName());
         user.setEmail(request.getEmail());
-
         user.setPassword(
                 passwordEncoder.encode(request.getPassword())
         );
-
         user.setRole("USER");
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        return new RegisterResponse(
+                savedUser.getId(),
+                savedUser.getName(),
+                savedUser.getEmail(),
+                savedUser.getRole()
+        );
     }
 
     public LoginResponse login(LoginRequest request) {
