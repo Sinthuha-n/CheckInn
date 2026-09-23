@@ -87,10 +87,17 @@ public class BookingService {
         Booking savedBooking =
                 bookingRepository.save(booking);
 
-        emailService.sendBookingConfirmation(
-                user.getEmail(),
-                savedBooking
-        );
+        try {
+            emailService.sendBookingConfirmation(
+                    user.getEmail(),
+                    savedBooking
+            );
+        } catch (Exception e) {
+            System.out.println(
+                    "Failed to send booking confirmation email: "
+                            + e.getMessage()
+            );
+        }
 
         return convertToResponse(savedBooking);
     }
@@ -222,5 +229,7 @@ public class BookingService {
 
         return booking;
     }
+
+
 
 }
