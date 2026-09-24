@@ -15,6 +15,8 @@ import com.checkinn.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import com.checkinn.exception.ForbiddenException;
 import org.springframework.transaction.annotation.Transactional;
+import com.checkinn.event.BookingConfirmedEvent;
+import org.springframework.context.ApplicationEventPublisher;
 
 
 import java.math.BigDecimal;
@@ -28,18 +30,19 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
-    private final EmailService emailService;
+    private final ApplicationEventPublisher eventPublisher;
+
 
     public BookingService(
             BookingRepository bookingRepository,
             RoomRepository roomRepository,
             UserRepository userRepository,
-            EmailService emailService
+            ApplicationEventPublisher eventPublisher
     ) {
         this.bookingRepository = bookingRepository;
         this.roomRepository = roomRepository;
         this.userRepository = userRepository;
-        this.emailService = emailService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -98,19 +101,13 @@ public class BookingService {
         Booking savedBooking =
                 bookingRepository.save(booking);
 
-        try {
-            emailService.sendBookingConfirmation(
-                    user.getEmail(),
-                    savedBooking
-            );
-        } catch (Exception e) {
-            System.out.println(
-                    "Failed to send booking confirmation email: "
-                            + e.getMessage()
-            );
-        }
+
+        eventPublisher.publishEvent(
+                new BookingConfirmedEvent(savedBooking.getId())
+        );
 
         return convertToResponse(savedBooking);
+
     }
 
     private void validateBooking(
