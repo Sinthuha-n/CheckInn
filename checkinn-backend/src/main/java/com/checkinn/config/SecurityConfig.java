@@ -81,6 +81,12 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.POST, "/api/reviews")
                         .hasAnyRole("USER", "ADMIN")
+
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
+                        ).permitAll()
                         
                 .anyRequest()
                 .authenticated()
@@ -90,6 +96,7 @@ public class SecurityConfig {
                         jwtAuthFilter,
                         UsernamePasswordAuthenticationFilter.class
                 );
+
 
         return http.build();
     }
