@@ -58,11 +58,13 @@ public class BookingService {
 
         validateBooking(request, room);
 
+
         List<Booking> overlappingBookings =
                 bookingRepository.findOverlappingBookings(
                         room.getId(),
                         request.getCheckInDate(),
-                        request.getCheckOutDate()
+                        request.getCheckOutDate(),
+                        BookingStatus.CANCELLED
                 );
 
         if (!overlappingBookings.isEmpty()) {
@@ -249,4 +251,5 @@ public class BookingService {
 
         return booking;
     }
+    
 }
