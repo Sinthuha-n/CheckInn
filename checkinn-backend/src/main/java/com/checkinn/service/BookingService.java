@@ -62,6 +62,12 @@ public class BookingService {
                         new ResourceNotFoundException("Room not found")
                 );
 
+        if (Boolean.FALSE.equals(room.getAvailable())) {
+            throw new ConflictException(
+                    "This room is currently unavailable for booking"
+            );
+        }
+
         validateBooking(request, room);
 
 
