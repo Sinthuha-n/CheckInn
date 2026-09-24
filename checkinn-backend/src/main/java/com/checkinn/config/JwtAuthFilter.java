@@ -1,6 +1,7 @@
 package com.checkinn.config;
 
 import com.checkinn.entity.User;
+import com.checkinn.enums.Role;
 import com.checkinn.repository.UserRepository;
 import com.checkinn.service.JwtService;
 import jakarta.servlet.FilterChain;
@@ -57,15 +58,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                 new RuntimeException("User not found")
                         );
 
-                String role = user.getRole();
+                Role role = user.getRole();
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                                 user.getEmail(),
                                 null,
                                 List.of(
-                                        new SimpleGrantedAuthority(
-                                                "ROLE_" + role
+                                        new SimpleGrantedAuthority("ROLE_" + role.name()
                                         )
                                 )
                         );
