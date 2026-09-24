@@ -1,13 +1,16 @@
 package com.checkinn.repository;
 
 import com.checkinn.entity.Room;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface RoomRepository extends JpaRepository<Room, Long> {
 
@@ -40,5 +43,12 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
             @Param("roomType") String roomType,
             @Param("capacity") Integer capacity,
             @Param("maxPrice") BigDecimal maxPrice
+    );
+
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT r FROM Room r WHERE r.id = :id")
+    Optional<Room> findByIdForUpdate(
+            @Param("id") Long id
     );
 }

@@ -14,6 +14,7 @@ import com.checkinn.repository.RoomRepository;
 import com.checkinn.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import com.checkinn.exception.ForbiddenException;
+import org.springframework.transaction.annotation.Transactional;
 
 
 import java.math.BigDecimal;
@@ -41,6 +42,7 @@ public class BookingService {
         this.emailService = emailService;
     }
 
+    @Transactional
     public BookingResponse createBooking(
             BookingRequest request,
             String userEmail
@@ -51,7 +53,8 @@ public class BookingService {
                         new ResourceNotFoundException("User not found")
                 );
 
-        Room room = roomRepository.findById(request.getRoomId())
+        Room room = roomRepository
+                .findByIdForUpdate(request.getRoomId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Room not found")
                 );
@@ -251,5 +254,5 @@ public class BookingService {
 
         return booking;
     }
-    
+
 }
