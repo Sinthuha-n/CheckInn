@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import com.checkinn.enums.BookingStatus;
 
 @Entity
 @Table(name = "bookings")
@@ -21,7 +22,8 @@ public class Booking {
 
     private BigDecimal totalPrice;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private BookingStatus status;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -70,11 +72,11 @@ public class Booking {
         this.totalPrice = totalPrice;
     }
 
-    public String getStatus() {
+    public BookingStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(BookingStatus status) {
         this.status = status;
     }
 

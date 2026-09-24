@@ -5,6 +5,7 @@ import com.checkinn.dto.BookingResponse;
 import com.checkinn.entity.Booking;
 import com.checkinn.entity.Room;
 import com.checkinn.entity.User;
+import com.checkinn.enums.BookingStatus;
 import com.checkinn.exception.BadRequestException;
 import com.checkinn.exception.ConflictException;
 import com.checkinn.exception.ResourceNotFoundException;
@@ -13,6 +14,7 @@ import com.checkinn.repository.RoomRepository;
 import com.checkinn.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import com.checkinn.exception.ForbiddenException;
+
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -86,7 +88,7 @@ public class BookingService {
         booking.setCheckOutDate(request.getCheckOutDate());
         booking.setNumberOfGuests(request.getNumberOfGuests());
         booking.setTotalPrice(totalPrice);
-        booking.setStatus("CONFIRMED");
+        booking.setStatus(BookingStatus.CONFIRMED);
 
         Booking savedBooking =
                 bookingRepository.save(booking);
@@ -164,7 +166,7 @@ public class BookingService {
                 booking.getCheckOutDate(),
                 booking.getNumberOfGuests(),
                 booking.getTotalPrice(),
-                booking.getStatus()
+                booking.getStatus().name()
         );
     }
 
@@ -202,13 +204,13 @@ public class BookingService {
             );
         }
 
-        if ("CANCELLED".equals(booking.getStatus())) {
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
             throw new ConflictException(
                     "Booking is already cancelled"
             );
         }
 
-        booking.setStatus("CANCELLED");
+        booking.setStatus(BookingStatus.CANCELLED);
 
         Booking savedBooking =
                 bookingRepository.save(booking);

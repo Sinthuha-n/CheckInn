@@ -5,6 +5,7 @@ import com.checkinn.dto.LoginResponse;
 import com.checkinn.dto.RegisterRequest;
 import com.checkinn.dto.RegisterResponse;
 import com.checkinn.entity.User;
+import com.checkinn.enums.Role;
 import com.checkinn.exception.BadRequestException;
 import com.checkinn.exception.ConflictException;
 import com.checkinn.repository.UserRepository;
@@ -43,7 +44,7 @@ public class AuthService {
         user.setPassword(
                 passwordEncoder.encode(request.getPassword())
         );
-        user.setRole("USER");
+        user.setRole(Role.USER);
 
         User savedUser = userRepository.save(user);
 
@@ -51,7 +52,7 @@ public class AuthService {
                 savedUser.getId(),
                 savedUser.getName(),
                 savedUser.getEmail(),
-                savedUser.getRole()
+                savedUser.getRole().name()
         );
     }
 
@@ -80,7 +81,7 @@ public class AuthService {
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                user.getRole(),
+                user.getRole().name(),
                 token
         );
     }
