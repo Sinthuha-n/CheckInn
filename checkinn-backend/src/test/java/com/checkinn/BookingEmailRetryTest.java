@@ -2,50 +2,64 @@
 package com.checkinn;
 
 import com.checkinn.entity.Booking;
+import com.checkinn.entity.EmailNotification;
 import com.checkinn.entity.User;
+import com.checkinn.enums.EmailStatus;
 import com.checkinn.event.BookingConfirmedEvent;
 import com.checkinn.event.BookingEmailListener;
 import com.checkinn.repository.BookingRepository;
+import com.checkinn.repository.EmailNotificationRepository;
 import com.checkinn.service.EmailService;
-import com.checkinn.service.PdfService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class BookingEmailRetryTest {
 
     private BookingRepository bookingRepository;
     private EmailService emailService;
-    private PdfService pdfService;
+    private EmailNotificationRepository notificationRepository;
     private BookingEmailListener listener;
 
     private Booking booking;
+    private EmailNotification notification;
 
     @BeforeEach
     void setUp() {
 
         bookingRepository = mock(BookingRepository.class);
         emailService = mock(EmailService.class);
-        pdfService = mock(PdfService.class);
+        notificationRepository =
+                mock(EmailNotificationRepository.class);
 
         listener = new BookingEmailListener(
                 bookingRepository,
                 emailService,
-                pdfService
+                notificationRepository
         );
 
         User user = new User();
         user.setEmail("test@example.com");
 
-        booking = new Booking();
+        booking = mock(Booking.class);
+        when(booking.getId()).thenReturn(1L);
+        when(booking.getUser()).thenReturn(user);
         booking.setUser(user);
+
+        notification = new EmailNotification();
+        notification.setBookingId(1L);
+        notification.setStatus(EmailStatus.PENDING);
 
         when(bookingRepository.findById(1L))
                 .thenReturn(Optional.of(booking));
+
+        when(notificationRepository.findByBookingId(1L))
+                .thenReturn(Optional.of(notification));
     }
 
     @Test
@@ -60,6 +74,13 @@ class BookingEmailRetryTest {
                         "test@example.com",
                         booking
                 );
+
+        assertEquals(
+                EmailStatus.SENT,
+                notification.getStatus()
+        );
+
+        assertEquals(1, notification.getRetryCount());
     }
 
     @Test
@@ -82,6 +103,13 @@ class BookingEmailRetryTest {
                         "test@example.com",
                         booking
                 );
+
+        assertEquals(
+                EmailStatus.SENT,
+                notification.getStatus()
+        );
+
+        assertEquals(2, notification.getRetryCount());
     }
 
     @Test
@@ -105,6 +133,13 @@ class BookingEmailRetryTest {
                         "test@example.com",
                         booking
                 );
+
+        assertEquals(
+                EmailStatus.SENT,
+                notification.getStatus()
+        );
+
+        assertEquals(3, notification.getRetryCount());
     }
 
     @Test
@@ -126,5 +161,14 @@ class BookingEmailRetryTest {
                         "test@example.com",
                         booking
                 );
+
+        assertEquals(
+                EmailStatus.FAILED,
+                notification.getStatus()
+        );
+
+        assertEquals(3, notification.getRetryCount());
+
+        assertNotNull(notification.getNextRetryAt());
     }
 }

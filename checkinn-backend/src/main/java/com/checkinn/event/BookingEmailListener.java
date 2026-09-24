@@ -1,10 +1,11 @@
-
 package com.checkinn.event;
 
 import com.checkinn.entity.Booking;
+import com.checkinn.entity.EmailNotification;
+import com.checkinn.enums.EmailStatus;
 import com.checkinn.repository.BookingRepository;
+import com.checkinn.repository.EmailNotificationRepository;
 import com.checkinn.service.EmailService;
-import com.checkinn.service.PdfService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -25,17 +27,16 @@ public class BookingEmailListener {
 
     private final BookingRepository bookingRepository;
     private final EmailService emailService;
-    private final PdfService pdfService;
+    private final EmailNotificationRepository notificationRepository;
 
-    // One constructor for all three dependencies
     public BookingEmailListener(
             BookingRepository bookingRepository,
             EmailService emailService,
-            PdfService pdfService
+            EmailNotificationRepository notificationRepository
     ) {
         this.bookingRepository = bookingRepository;
         this.emailService = emailService;
-        this.pdfService = pdfService;
+        this.notificationRepository = notificationRepository;
     }
 
     @Async
@@ -79,6 +80,11 @@ public class BookingEmailListener {
                         booking
                 );
 
+                markAsSent(
+                        booking.getId(),
+                        attempt
+                );
+
                 log.info(
                         "Confirmation email sent for booking {} on attempt {}",
                         booking.getId(),
@@ -99,6 +105,12 @@ public class BookingEmailListener {
 
                 if (attempt >= MAX_RETRIES) {
 
+                    markAsFailed(
+                            booking.getId(),
+                            attempt,
+                            emailError
+                    );
+
                     log.error(
                             "Email failed after {} attempts for booking {}",
                             MAX_RETRIES,
@@ -114,11 +126,57 @@ public class BookingEmailListener {
                 } catch (InterruptedException interruptedError) {
 
                     Thread.currentThread().interrupt();
+
+                    markAsFailed(
+                            booking.getId(),
+                            attempt,
+                            interruptedError
+                    );
+
                     return;
                 }
             }
         }
     }
+
+    private void markAsSent(
+            Long bookingId,
+            int attempt
+    ) {
+
+        notificationRepository
+                .findByBookingId(bookingId)
+                .ifPresent(notification -> {
+
+                    notification.setStatus(EmailStatus.SENT);
+                    notification.setRetryCount(attempt);
+                    notification.setSentAt(LocalDateTime.now());
+                    notification.setNextRetryAt(null);
+                    notification.setLastError(null);
+
+                    notificationRepository.save(notification);
+                });
+    }
+
+    private void markAsFailed(
+            Long bookingId,
+            int attempt,
+            Exception error
+    ) {
+
+        notificationRepository
+                .findByBookingId(bookingId)
+                .ifPresent(notification -> {
+
+                    notification.setStatus(EmailStatus.FAILED);
+                    notification.setRetryCount(attempt);
+                    notification.setLastError(error.getMessage());
+
+                    notification.setNextRetryAt(
+                            LocalDateTime.now().plusMinutes(5)
+                    );
+
+                    notificationRepository.save(notification);
+                });
+    }
 }
-
-
