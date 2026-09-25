@@ -56,6 +56,9 @@ class BookingOverlapTest {
 
         Room room = mock(Room.class);
 
+        when(room.getAvailable()).thenReturn(true);
+        when(room.getCapacity()).thenReturn(2);
+
         when(room.getId()).thenReturn(1L);
         when(room.getCapacity()).thenReturn(2);
 

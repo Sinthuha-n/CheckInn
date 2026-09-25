@@ -54,6 +54,8 @@ class BookingDateValidationTest {
 
         // Create mock room
         Room room = mock(Room.class);
+
+        when(room.getAvailable()).thenReturn(true);
         when(room.getCapacity()).thenReturn(2);
 
         // Check-out is earlier than check-in

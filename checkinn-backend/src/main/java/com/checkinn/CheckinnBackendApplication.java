@@ -1,4 +1,3 @@
-
 package com.checkinn;
 
 import org.springframework.boot.SpringApplication;
@@ -10,6 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableAsync
 @EnableScheduling
 public class CheckinnBackendApplication {
+
 	public static void main(String[] args) {
 		SpringApplication.run(
 				CheckinnBackendApplication.class,
