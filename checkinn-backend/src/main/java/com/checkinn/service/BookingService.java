@@ -120,7 +120,7 @@ public class BookingService {
             BookingRequest request,
             Room room
     ) {
-
+        // 1. Check for missing dates
         if (request.getCheckInDate() == null ||
                 request.getCheckOutDate() == null) {
 
@@ -129,6 +129,7 @@ public class BookingService {
             );
         }
 
+        // 2. Checkout must be after check-in
         if (!request.getCheckOutDate()
                 .isAfter(request.getCheckInDate())) {
 
@@ -136,7 +137,7 @@ public class BookingService {
                     "Check-out date must be after check-in date"
             );
         }
-
+        // 3. Prevent past bookings
         if (request.getCheckInDate()
                 .isBefore(LocalDate.now())) {
 
@@ -144,7 +145,7 @@ public class BookingService {
                     "Check-in date cannot be in the past"
             );
         }
-
+        // 4. At least one guest is required
         if (request.getNumberOfGuests() == null ||
                 request.getNumberOfGuests() <= 0) {
 
@@ -152,7 +153,7 @@ public class BookingService {
                     "Number of guests must be greater than zero"
             );
         }
-
+        // 5. Respect room capacity
         if (request.getNumberOfGuests() > room.getCapacity()) {
 
             throw new BadRequestException(
@@ -257,5 +258,7 @@ public class BookingService {
 
         return booking;
     }
+
+
 
 }
