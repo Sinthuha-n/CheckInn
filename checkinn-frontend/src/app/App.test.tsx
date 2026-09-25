@@ -7,7 +7,7 @@ describe('CheckInn application', () => {
     sessionStorage.clear()
   })
 
-  it('renders the foundation inside the shared application layout', () => {
+  it('renders the landing page inside the shared application layout', () => {
     renderApp()
 
     expect(
@@ -45,15 +45,16 @@ describe('CheckInn application', () => {
     ).toHaveAttribute('aria-expanded', 'true')
   })
 
-  it('activates the foundation call to action', async () => {
-    const user = userEvent.setup()
+  it('links the primary action to the room search', () => {
     renderApp()
 
-    await user.click(
-      screen.getByRole('button', { name: /explore the foundation/i }),
+    expect(screen.getByRole('link', { name: /plan your stay/i })).toHaveAttribute(
+      'href',
+      '#stay-search',
     )
-
-    expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalled()
+    expect(
+      screen.getByRole('search', { name: /search available rooms/i }),
+    ).toBeInTheDocument()
   })
 
   it('renders the branded not-found route and returns home', async () => {

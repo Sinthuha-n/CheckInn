@@ -58,7 +58,7 @@ export function Header() {
           {isAuthenticated ? (
             <>
               <NavLink className={navClassName} onClick={closeMenu} to="/rooms">
-                Rooms
+                Find a room
               </NavLink>
               {session?.role === 'ADMIN' ? (
                 <NavLink className={navClassName} onClick={closeMenu} to="/admin">
@@ -80,7 +80,7 @@ export function Header() {
                 Sign in
               </NavLink>
               <NavLink className="nav-cta" onClick={closeMenu} to="/register">
-                Join CheckInn
+                Create account
               </NavLink>
             </>
           )}
