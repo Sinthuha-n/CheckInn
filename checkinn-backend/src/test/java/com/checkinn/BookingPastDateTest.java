@@ -5,8 +5,7 @@ import com.checkinn.dto.BookingRequest;
 import com.checkinn.entity.Booking;
 import com.checkinn.entity.Room;
 import com.checkinn.entity.User;
-import com.checkinn.enums.BookingStatus;
-import com.checkinn.exception.ConflictException;
+import com.checkinn.exception.BadRequestException;
 import com.checkinn.repository.BookingRepository;
 import com.checkinn.repository.RoomRepository;
 import com.checkinn.repository.UserRepository;
@@ -17,14 +16,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-class BookingOverlapTest {
+class BookingPastDateTest {
 
     private BookingRepository bookingRepository;
     private RoomRepository roomRepository;
@@ -49,55 +46,45 @@ class BookingOverlapTest {
     }
 
     @Test
-    void shouldRejectOverlappingBooking() {
+    void shouldRejectBookingWithPastCheckInDate() {
 
         User user = new User();
         user.setEmail("test@example.com");
 
         Room room = mock(Room.class);
-
+        when(room.getCapacity()).thenReturn(2);
         when(room.getAvailable()).thenReturn(true);
-        when(room.getCapacity()).thenReturn(2);
-
-        when(room.getId()).thenReturn(1L);
-        when(room.getCapacity()).thenReturn(2);
 
         BookingRequest request = new BookingRequest();
         request.setRoomId(1L);
-        request.setCheckInDate(LocalDate.now().plusDays(10));
-        request.setCheckOutDate(LocalDate.now().plusDays(13));
+        request.setCheckInDate(
+                LocalDate.now().minusDays(2)
+        );
+        request.setCheckOutDate(
+                LocalDate.now().plusDays(2)
+        );
         request.setNumberOfGuests(2);
 
-        when(userRepository.findByEmail("test@example.com"))
-                .thenReturn(Optional.of(user));
+        when(userRepository.findByEmail(
+                "test@example.com"
+        )).thenReturn(Optional.of(user));
 
         when(roomRepository.findByIdForUpdate(1L))
                 .thenReturn(Optional.of(room));
 
-        when(bookingRepository.findOverlappingBookings(
-                eq(1L),
-                any(LocalDate.class),
-                any(LocalDate.class),
-                eq(BookingStatus.CANCELLED)
-        )).thenReturn(List.of(new Booking()));
-
-        ConflictException exception = assertThrows(
-                ConflictException.class,
+        assertThrows(
+                BadRequestException.class,
                 () -> bookingService.createBooking(
                         request,
                         "test@example.com"
                 )
         );
 
-        assertEquals(
-                "Room is not available for selected dates",
-                exception.getMessage()
-        );
-
+        // Invalid bookings must not be saved.
         verify(bookingRepository, never())
                 .save(any(Booking.class));
 
-        verify(eventPublisher, never())
-                .publishEvent(any(Object.class));
+        // No confirmation email event.
+        verifyNoInteractions(eventPublisher);
     }
 }

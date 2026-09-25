@@ -54,6 +54,8 @@ class BookingCapacityTest {
 
         // 2. Create room with maximum capacity of 2
         Room room = mock(Room.class);
+
+        when(room.getAvailable()).thenReturn(true);
         when(room.getCapacity()).thenReturn(2);
 
         // 3. Request a booking for 4 guests

@@ -5,8 +5,7 @@ import com.checkinn.dto.BookingRequest;
 import com.checkinn.entity.Booking;
 import com.checkinn.entity.Room;
 import com.checkinn.entity.User;
-import com.checkinn.enums.BookingStatus;
-import com.checkinn.exception.ConflictException;
+import com.checkinn.exception.BadRequestException;
 import com.checkinn.repository.BookingRepository;
 import com.checkinn.repository.RoomRepository;
 import com.checkinn.repository.UserRepository;
@@ -17,14 +16,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-class BookingOverlapTest {
+class BookingInputValidationTest {
 
     private BookingRepository bookingRepository;
     private RoomRepository roomRepository;
@@ -35,6 +32,7 @@ class BookingOverlapTest {
 
     @BeforeEach
     void setUp() {
+
         bookingRepository = mock(BookingRepository.class);
         roomRepository = mock(RoomRepository.class);
         userRepository = mock(UserRepository.class);
@@ -46,10 +44,6 @@ class BookingOverlapTest {
                 userRepository,
                 eventPublisher
         );
-    }
-
-    @Test
-    void shouldRejectOverlappingBooking() {
 
         User user = new User();
         user.setEmail("test@example.com");
@@ -59,45 +53,95 @@ class BookingOverlapTest {
         when(room.getAvailable()).thenReturn(true);
         when(room.getCapacity()).thenReturn(2);
 
-        when(room.getId()).thenReturn(1L);
-        when(room.getCapacity()).thenReturn(2);
-
-        BookingRequest request = new BookingRequest();
-        request.setRoomId(1L);
-        request.setCheckInDate(LocalDate.now().plusDays(10));
-        request.setCheckOutDate(LocalDate.now().plusDays(13));
-        request.setNumberOfGuests(2);
-
         when(userRepository.findByEmail("test@example.com"))
                 .thenReturn(Optional.of(user));
 
         when(roomRepository.findByIdForUpdate(1L))
                 .thenReturn(Optional.of(room));
+    }
 
-        when(bookingRepository.findOverlappingBookings(
-                eq(1L),
-                any(LocalDate.class),
-                any(LocalDate.class),
-                eq(BookingStatus.CANCELLED)
-        )).thenReturn(List.of(new Booking()));
+    private BookingRequest validRequest() {
 
-        ConflictException exception = assertThrows(
-                ConflictException.class,
+        BookingRequest request = new BookingRequest();
+
+        request.setRoomId(1L);
+        request.setCheckInDate(LocalDate.now().plusDays(10));
+        request.setCheckOutDate(LocalDate.now().plusDays(12));
+        request.setNumberOfGuests(2);
+
+        return request;
+    }
+
+    private void assertInvalid(BookingRequest request) {
+
+        assertThrows(
+                BadRequestException.class,
                 () -> bookingService.createBooking(
                         request,
                         "test@example.com"
                 )
         );
 
-        assertEquals(
-                "Room is not available for selected dates",
-                exception.getMessage()
-        );
-
         verify(bookingRepository, never())
                 .save(any(Booking.class));
 
-        verify(eventPublisher, never())
-                .publishEvent(any(Object.class));
+        verifyNoInteractions(eventPublisher);
+    }
+
+    @Test
+    void shouldRejectNullCheckInDate() {
+
+        BookingRequest request = validRequest();
+        request.setCheckInDate(null);
+
+        assertInvalid(request);
+    }
+
+    @Test
+    void shouldRejectNullCheckOutDate() {
+
+        BookingRequest request = validRequest();
+        request.setCheckOutDate(null);
+
+        assertInvalid(request);
+    }
+
+    @Test
+    void shouldRejectSameDayCheckout() {
+
+        BookingRequest request = validRequest();
+
+        request.setCheckOutDate(
+                request.getCheckInDate()
+        );
+
+        assertInvalid(request);
+    }
+
+    @Test
+    void shouldRejectZeroGuests() {
+
+        BookingRequest request = validRequest();
+        request.setNumberOfGuests(0);
+
+        assertInvalid(request);
+    }
+
+    @Test
+    void shouldRejectNegativeGuests() {
+
+        BookingRequest request = validRequest();
+        request.setNumberOfGuests(-2);
+
+        assertInvalid(request);
+    }
+
+    @Test
+    void shouldRejectNullGuestCount() {
+
+        BookingRequest request = validRequest();
+        request.setNumberOfGuests(null);
+
+        assertInvalid(request);
     }
 }
