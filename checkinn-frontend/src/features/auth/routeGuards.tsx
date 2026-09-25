@@ -1,13 +1,11 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import type { Role } from '../../types/api'
 import { AccessDeniedPage } from '../../pages/AccessDeniedPage'
+import {
+  getSafeAuthDestination,
+  type AuthRedirectState,
+} from './authRedirect'
 import { useAuth } from './useAuth'
-
-export interface AuthRedirectState {
-  from?: string
-  email?: string
-  registrationComplete?: boolean
-}
 
 export function ProtectedRoute() {
   const { isAuthenticated } = useAuth()
@@ -28,8 +26,14 @@ export function ProtectedRoute() {
 
 export function GuestOnlyRoute() {
   const { isAuthenticated } = useAuth()
+  const location = useLocation()
+  const state = (location.state as AuthRedirectState | null) ?? null
 
-  return isAuthenticated ? <Navigate to="/rooms" replace /> : <Outlet />
+  return isAuthenticated ? (
+    <Navigate to={getSafeAuthDestination(state?.from)} replace />
+  ) : (
+    <Outlet />
+  )
 }
 
 export function RoleRoute({ allowedRoles }: { allowedRoles: Role[] }) {

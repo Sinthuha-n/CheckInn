@@ -4,11 +4,11 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { FormField } from '../components/ui/FormField'
 import { ApiError } from '../services/apiClient'
-import type { AuthRedirectState } from '../features/auth/routeGuards'
+import {
+  getSafeAuthDestination,
+  type AuthRedirectState,
+} from '../features/auth/authRedirect'
 import { useAuth } from '../features/auth/useAuth'
-
-const getSafeDestination = (value: string | undefined) =>
-  value?.startsWith('/') && !value.startsWith('//') ? value : '/rooms'
 
 export function LoginPage() {
   const location = useLocation()
@@ -29,7 +29,7 @@ export function LoginPage() {
 
     try {
       await login({ email: email.trim(), password })
-      navigate(getSafeDestination(state?.from), { replace: true })
+      navigate(getSafeAuthDestination(state?.from), { replace: true })
     } catch (caughtError) {
       if (caughtError instanceof ApiError) {
         setError(caughtError.message)

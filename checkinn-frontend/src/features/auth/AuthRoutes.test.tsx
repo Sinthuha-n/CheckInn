@@ -26,7 +26,9 @@ describe('authentication routes', () => {
     const user = userEvent.setup()
     const session = createSession()
     vi.mocked(fetch).mockResolvedValue(jsonResponse(session))
-    renderApp('/rooms')
+    const { router } = renderApp(
+      '/rooms?checkIn=2030-06-12&checkOut=2030-06-15&guests=3',
+    )
 
     await user.type(screen.getByLabelText(/email address/i), session.email)
     await user.type(screen.getByLabelText(/^password$/i), 'Password123!')
@@ -39,6 +41,10 @@ describe('authentication routes', () => {
     ).toBeInTheDocument()
     expect(authStorage.read()).toEqual(session)
     expect(screen.getByText(session.name)).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/rooms')
+    expect(router.state.location.search).toBe(
+      '?checkIn=2030-06-12&checkOut=2030-06-15&guests=3',
+    )
   })
 
   it('shows backend validation errors on the matching field', async () => {

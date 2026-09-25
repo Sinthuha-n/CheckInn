@@ -6,7 +6,7 @@ import {
   RoleRoute,
 } from '../features/auth/routeGuards'
 import { FeaturePreviewPage } from '../pages/FeaturePreviewPage'
-import { FoundationPage } from '../pages/FoundationPage'
+import { LandingPage } from '../pages/LandingPage'
 import { LoginPage } from '../pages/LoginPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { RegisterPage } from '../pages/RegisterPage'
@@ -15,7 +15,7 @@ export const appRoutes: RouteObject[] = [
   {
     element: <AppLayout />,
     children: [
-      { index: true, element: <FoundationPage /> },
+      { index: true, element: <LandingPage /> },
       {
         element: <GuestOnlyRoute />,
         children: [

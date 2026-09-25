@@ -10,6 +10,7 @@ import '@fontsource/manrope/latin-600.css'
 import './styles/tokens.css'
 import './styles/global.css'
 import './styles/auth.css'
+import './styles/landing.css'
 import { AppProviders } from './app/AppProviders'
 import { router } from './app/router'
 
