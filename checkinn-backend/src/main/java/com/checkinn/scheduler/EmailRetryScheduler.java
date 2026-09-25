@@ -3,13 +3,12 @@ package com.checkinn.scheduler;
 
 import com.checkinn.entity.EmailNotification;
 import com.checkinn.enums.EmailStatus;
-import com.checkinn.event.BookingConfirmedEvent;
-import com.checkinn.event.BookingEmailListener;
 import com.checkinn.repository.EmailNotificationRepository;
+import com.checkinn.service.EmailDeliveryService;
+import com.checkinn.service.EmailNotificationClaimService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -23,49 +22,57 @@ public class EmailRetryScheduler {
             LoggerFactory.getLogger(EmailRetryScheduler.class);
 
     private final EmailNotificationRepository notificationRepository;
-    private final BookingEmailListener bookingEmailListener;
+    private final EmailNotificationClaimService claimService;
+    private final EmailDeliveryService deliveryService;
 
     public EmailRetryScheduler(
             EmailNotificationRepository notificationRepository,
-            BookingEmailListener bookingEmailListener
+            EmailNotificationClaimService claimService,
+            EmailDeliveryService deliveryService
     ) {
         this.notificationRepository = notificationRepository;
-        this.bookingEmailListener = bookingEmailListener;
+        this.claimService = claimService;
+        this.deliveryService = deliveryService;
     }
 
-    // Check for failed emails every 60 seconds
     @Scheduled(fixedDelay = 60000)
     public void retryFailedEmails() {
 
-        List<EmailNotification> failedEmails =
+        // Recover claims left behind by crashed workers.
+        int recovered = claimService.releaseExpiredClaims();
+
+        if (recovered > 0) {
+            log.info("Recovered {} expired email claims", recovered);
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        List<EmailNotification> pending =
+                notificationRepository
+                        .findByStatusAndNextRetryAtLessThanEqual(
+                                EmailStatus.PENDING,
+                                now
+                        );
+
+        List<EmailNotification> failed =
                 notificationRepository
                         .findByStatusAndNextRetryAtLessThanEqual(
                                 EmailStatus.FAILED,
-                                LocalDateTime.now()
+                                now
                         );
 
-        log.info(
-                "Found {} email notifications ready for retry",
-                failedEmails.size()
-        );
+        pending.addAll(failed);
 
-        for (EmailNotification notification : failedEmails) {
-
-            log.info(
-                    "Retrying confirmation email for booking {}",
-                    notification.getBookingId()
-            );
+        for (EmailNotification notification : pending) {
 
             try {
-                bookingEmailListener.sendConfirmation(
-                        new BookingConfirmedEvent(
-                                notification.getBookingId()
-                        )
+                deliveryService.deliver(
+                        notification.getBookingId()
                 );
 
             } catch (Exception error) {
                 log.error(
-                        "Could not dispatch email retry for booking {}",
+                        "Scheduled delivery failed for booking {}",
                         notification.getBookingId(),
                         error
                 );
