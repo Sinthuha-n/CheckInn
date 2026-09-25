@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
 
 @Component
 public class EmailRetryScheduler {
@@ -47,13 +48,13 @@ public class EmailRetryScheduler {
 
         LocalDateTime now = LocalDateTime.now();
 
-        List<EmailNotification> pending =
+        List<EmailNotification> pending = new ArrayList<>(
                 notificationRepository
                         .findByStatusAndNextRetryAtLessThanEqual(
                                 EmailStatus.PENDING,
                                 now
-                        );
-
+                        )
+        );
         List<EmailNotification> failed =
                 notificationRepository
                         .findByStatusAndNextRetryAtLessThanEqual(
