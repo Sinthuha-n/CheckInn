@@ -59,7 +59,7 @@ export function Header() {
 
           {isAuthenticated ? (
             <>
-              <NavLink className={navClassName} onClick={closeMenu} to="/rooms">
+              <NavLink className={navClassName} onClick={closeMenu} to="/find-your-stay">
                 Find a room
               </NavLink>
               {session ? (

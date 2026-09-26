@@ -6,10 +6,16 @@ import {
   RoleRoute,
 } from '../features/auth/routeGuards'
 import { FeaturePreviewPage } from '../pages/FeaturePreviewPage'
+import { BookingConfirmationPage } from '../pages/BookingConfirmationPage'
+import { BookingPage } from '../pages/BookingPage'
+import { FindYourStayPage } from '../pages/FindYourStayPage'
 import { LandingPage } from '../pages/LandingPage'
 import { LoginPage } from '../pages/LoginPage'
+import { MyBookingsPage } from '../pages/MyBookingsPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { RegisterPage } from '../pages/RegisterPage'
+import { RoomDetailsPage } from '../pages/RoomDetailsPage'
+import { RoomsPage } from '../pages/RoomsPage'
 
 export const appRoutes: RouteObject[] = [
   {
@@ -27,8 +33,28 @@ export const appRoutes: RouteObject[] = [
         element: <ProtectedRoute />,
         children: [
           {
+            path: 'find-your-stay',
+            element: <FindYourStayPage />,
+          },
+          {
             path: 'rooms',
-            element: <FeaturePreviewPage area="rooms" />,
+            element: <RoomsPage />,
+          },
+          {
+            path: 'rooms/:roomId',
+            element: <RoomDetailsPage />,
+          },
+          {
+            path: 'rooms/:roomId/book',
+            element: <BookingPage />,
+          },
+          {
+            path: 'bookings/:bookingId/confirmation',
+            element: <BookingConfirmationPage />,
+          },
+          {
+            path: 'my-bookings',
+            element: <MyBookingsPage />,
           },
           {
             element: <RoleRoute allowedRoles={['ADMIN']} />,

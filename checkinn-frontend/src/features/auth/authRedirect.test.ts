@@ -18,6 +18,6 @@ describe('authentication destinations', () => {
     '/login/',
     '/register?from=/admin',
   ])('falls back for unsafe or inappropriate destination %s', (destination) => {
-    expect(getSafeAuthDestination(destination)).toBe('/rooms')
+    expect(getSafeAuthDestination(destination)).toBe('/find-your-stay')
   })
 })

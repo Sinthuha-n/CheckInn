@@ -1,6 +1,37 @@
+.app-shell--landing {
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.app-shell--landing > main {
+  min-height: 0;
+}
+
+.landing-page {
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
+  scroll-snap-type: y mandatory;
+}
+
+.landing-panel {
+  display: grid;
+  min-height: 100dvh;
+  align-items: center;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.landing-page > .site-footer {
+  scroll-snap-align: end;
+}
+
 .landing-hero {
   position: relative;
-  min-height: min(47rem, calc(100svh - 5.5rem));
+  min-height: 100dvh;
   overflow: hidden;
   background: var(--color-navy-900);
   color: var(--color-ivory-50);
@@ -109,6 +140,7 @@
   margin-bottom: var(--space-3);
 }
 
+.search-section__heading h1,
 .search-section__heading h2,
 .experience-copy h2,
 .brand-story h2 {
@@ -118,6 +150,12 @@
   font-weight: 500;
   letter-spacing: -0.035em;
   line-height: 0.98;
+}
+
+.search-section--authenticated {
+  display: grid;
+  min-height: min(43rem, calc(100dvh - 5.5rem));
+  align-items: center;
 }
 
 .search-section__heading > p {
@@ -372,6 +410,28 @@
 }
 
 @media (max-width: 52rem) {
+  .app-shell--landing {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .landing-page {
+    height: auto;
+    overflow: visible;
+    scroll-snap-type: none;
+  }
+
+  .landing-panel {
+    min-height: auto;
+    scroll-snap-align: none;
+    scroll-snap-stop: normal;
+  }
+
+  .landing-hero {
+    min-height: auto;
+  }
+
   .landing-hero__layout,
   .search-section__heading,
   .experience-section__layout {
@@ -406,6 +466,31 @@
   }
 }
 
+@media (max-height: 44rem) {
+  .app-shell--landing {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .landing-page {
+    height: auto;
+    overflow: visible;
+    scroll-snap-type: none;
+  }
+
+  .landing-panel {
+    min-height: auto;
+    scroll-snap-align: none;
+    scroll-snap-stop: normal;
+  }
+
+
+  .landing-hero {
+    min-height: auto;
+  }
+}
+
 @media (max-width: 42rem) {
   .stay-search {
     grid-template-columns: 1fr;
@@ -437,10 +522,6 @@
 }
 
 @media (max-width: 36rem) {
-  .landing-hero {
-    min-height: calc(100svh - 4.75rem);
-  }
-
   .landing-hero::before {
     right: -24rem;
   }

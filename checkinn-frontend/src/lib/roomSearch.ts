@@ -60,3 +60,20 @@ export function serializeRoomSearch(values: RoomSearchParams) {
     guests: String(values.guests),
   }).toString()
 }
+
+export function parseRoomSearch(search: string): RoomSearchParams | null {
+  const params = new URLSearchParams(search)
+  const values: RoomSearchParams = {
+    checkIn: params.get('checkIn') ?? '',
+    checkOut: params.get('checkOut') ?? '',
+    guests: Number(params.get('guests')),
+  }
+
+  return Object.keys(validateRoomSearch(values)).length === 0 ? values : null
+}
+
+export function getNumberOfNights(checkIn: string, checkOut: string) {
+  const start = new Date(`${checkIn}T00:00:00`)
+  const end = new Date(`${checkOut}T00:00:00`)
+  return Math.round((end.getTime() - start.getTime()) / 86_400_000)
+}
