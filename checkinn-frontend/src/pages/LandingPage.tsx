@@ -42,10 +42,14 @@ export function LandingPage() {
               Discover a more considered way to find your next room, make your
               reservation, and arrive with confidence.
             </p>
-            <a className="button button--large button--primary" href="#stay-search">
+            <Link
+              className="button button--large button--primary"
+              state={isAuthenticated ? undefined : { from: '/rooms' }}
+              to={isAuthenticated ? '/rooms' : '/login'}
+            >
               Plan your stay
               <ArrowDown aria-hidden="true" size={18} />
-            </a>
+            </Link>
           </div>
 
           <aside className="landing-hero__note" aria-label="CheckInn promise">

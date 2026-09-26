@@ -1,5 +1,7 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { authStorage } from '../features/auth/authStorage'
+import { createSession } from '../test/authFixtures'
 import { renderApp } from '../test/renderApp'
 
 describe('CheckInn application', () => {
@@ -45,15 +47,31 @@ describe('CheckInn application', () => {
     ).toHaveAttribute('aria-expanded', 'true')
   })
 
-  it('links the primary action to the room search', () => {
-    renderApp()
+  it('sends signed-out guests from the primary action to sign in', async () => {
+    const user = userEvent.setup()
+    const { router } = renderApp()
 
-    expect(screen.getByRole('link', { name: /plan your stay/i })).toHaveAttribute(
-      'href',
-      '#stay-search',
-    )
+    await user.click(screen.getByRole('link', { name: /plan your stay/i }))
+
     expect(
-      screen.getByRole('search', { name: /search available rooms/i }),
+      await screen.findByRole('heading', { name: /welcome back/i }),
+    ).toBeInTheDocument()
+    expect(router.state.location.state).toEqual({ from: '/rooms' })
+    expect(
+      screen.queryByRole('search', { name: /search available rooms/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('sends authenticated guests directly to Find Your Stay', async () => {
+    const user = userEvent.setup()
+    authStorage.write(createSession())
+    const { router } = renderApp()
+
+    await user.click(screen.getByRole('link', { name: /plan your stay/i }))
+
+    expect(router.state.location.pathname).toBe('/rooms')
+    expect(
+      screen.getByRole('heading', { name: /your room search starts here/i }),
     ).toBeInTheDocument()
   })
 

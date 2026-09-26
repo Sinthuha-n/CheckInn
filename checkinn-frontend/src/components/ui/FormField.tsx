@@ -30,7 +30,7 @@ export function FormField({
         {...inputProps}
       />
       {error ? (
-        <p className="form-field__error" id={descriptionId}>
+        <p className="form-field__error" id={descriptionId} role="alert">
           {error}
         </p>
       ) : hint ? (

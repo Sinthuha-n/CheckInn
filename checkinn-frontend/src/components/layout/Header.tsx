@@ -1,8 +1,10 @@
-import { KeyRound, LogOut, Menu, X } from 'lucide-react'
+import { KeyRound, Menu, X } from 'lucide-react'
 import { useState } from 'react'
+import { flushSync } from 'react-dom'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/useAuth'
 import { Container } from '../ui/Container'
+import { UserMenu } from './UserMenu'
 
 const navClassName = ({ isActive }: { isActive: boolean }) =>
   `nav-link${isActive ? ' nav-link--active' : ''}`
@@ -15,8 +17,8 @@ export function Header() {
   const closeMenu = () => setIsMenuOpen(false)
 
   const handleLogout = () => {
+    flushSync(logout)
     navigate('/', { replace: true, flushSync: true })
-    logout()
     closeMenu()
   }
 
@@ -60,19 +62,13 @@ export function Header() {
               <NavLink className={navClassName} onClick={closeMenu} to="/rooms">
                 Find a room
               </NavLink>
-              {session?.role === 'ADMIN' ? (
-                <NavLink className={navClassName} onClick={closeMenu} to="/admin">
-                  Admin
-                </NavLink>
+              {session ? (
+                <UserMenu
+                  onLogout={handleLogout}
+                  onNavigate={closeMenu}
+                  session={session}
+                />
               ) : null}
-              <span className="site-nav__identity">
-                <span>Signed in as</span>
-                {session?.name}
-              </span>
-              <button className="nav-action" onClick={handleLogout} type="button">
-                <LogOut aria-hidden="true" size={16} />
-                Sign out
-              </button>
             </>
           ) : (
             <>
