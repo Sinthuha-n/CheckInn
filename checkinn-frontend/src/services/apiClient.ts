@@ -27,6 +27,45 @@ interface ApiRequestOptions extends Omit<RequestInit, 'body'> {
   token?: string
 }
 
+const request = async (
+  path: string,
+  { body, headers, token, ...options }: ApiRequestOptions = {},
+) => {
+  const requestHeaders = new Headers(headers)
+  requestHeaders.set('Accept', 'application/json')
+
+  if (body !== undefined) {
+    requestHeaders.set('Content-Type', 'application/json')
+  }
+
+  if (token) {
+    requestHeaders.set('Authorization', `Bearer ${token}`)
+  }
+
+  let response: Response
+
+  try {
+    response = await fetch(`${env.apiBaseUrl}${path}`, {
+      ...options,
+      body: body === undefined ? undefined : JSON.stringify(body),
+      headers: requestHeaders,
+    })
+  } catch {
+    throw new ApiError({
+      status: 0,
+      message:
+        'We could not reach CheckInn. Check your connection and try again.',
+    })
+  }
+
+  if (!response.ok) {
+    expireInvalidSession(response.status, token)
+    throw await readError(response)
+  }
+
+  return response
+}
+
 const isStringRecord = (value: unknown): value is Record<string, string> =>
   typeof value === 'object' &&
   value !== null &&
@@ -79,43 +118,21 @@ const expireInvalidSession = (status: number, token: string | undefined) => {
 
 export async function apiRequest<T>(
   path: string,
-  { body, headers, token, ...options }: ApiRequestOptions = {},
+  options: ApiRequestOptions = {},
 ): Promise<T> {
-  const requestHeaders = new Headers(headers)
-  requestHeaders.set('Accept', 'application/json')
-
-  if (body !== undefined) {
-    requestHeaders.set('Content-Type', 'application/json')
-  }
-
-  if (token) {
-    requestHeaders.set('Authorization', `Bearer ${token}`)
-  }
-
-  let response: Response
-
-  try {
-    response = await fetch(`${env.apiBaseUrl}${path}`, {
-      ...options,
-      body: body === undefined ? undefined : JSON.stringify(body),
-      headers: requestHeaders,
-    })
-  } catch {
-    throw new ApiError({
-      status: 0,
-      message:
-        'We could not reach CheckInn. Check your connection and try again.',
-    })
-  }
-
-  if (!response.ok) {
-    expireInvalidSession(response.status, token)
-    throw await readError(response)
-  }
+  const response = await request(path, options)
 
   if (response.status === 204) {
     return undefined as T
   }
 
   return (await response.json()) as T
+}
+
+export async function apiDownload(
+  path: string,
+  options: ApiRequestOptions = {},
+) {
+  const response = await request(path, options)
+  return response.blob()
 }

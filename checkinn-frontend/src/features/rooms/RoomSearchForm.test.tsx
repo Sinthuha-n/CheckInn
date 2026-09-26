@@ -4,7 +4,7 @@ import { createSession } from '../../test/authFixtures'
 import { renderApp } from '../../test/renderApp'
 import { authStorage } from '../auth/authStorage'
 
-describe('landing room search', () => {
+describe('authenticated room search', () => {
   beforeEach(() => {
     sessionStorage.clear()
   })
@@ -19,8 +19,9 @@ describe('landing room search', () => {
   }
 
   it('shows accessible inline validation for an incomplete search', async () => {
+    authStorage.write(createSession())
     const user = userEvent.setup()
-    renderApp()
+    renderApp('/find-your-stay')
 
     await user.clear(screen.getByLabelText('Guests'))
     await user.click(screen.getByRole('button', { name: /find a room/i }))
@@ -37,31 +38,23 @@ describe('landing room search', () => {
     )
   })
 
-  it('preserves the complete anonymous search through the login redirect', async () => {
-    const { router } = renderApp()
-    const user = await completeSearch()
+  it('redirects anonymous visitors to sign in before showing search', async () => {
+    const { router } = renderApp('/find-your-stay')
 
-    await user.click(screen.getByRole('button', { name: /find a room/i }))
-
-    expect(
-      await screen.findByRole('heading', { name: /welcome back/i }),
-    ).toBeInTheDocument()
-    expect(router.state.location.pathname).toBe('/login')
-    expect(router.state.location.state).toEqual({
-      from: '/rooms?checkIn=2030-06-12&checkOut=2030-06-15&guests=3',
-    })
+    expect(await screen.findByRole('heading', { name: /welcome back/i })).toBeInTheDocument()
+    expect(router.state.location.state).toEqual({ from: '/find-your-stay' })
   })
 
   it('submits with the keyboard and keeps parameters for signed-in guests', async () => {
     authStorage.write(createSession())
-    const { router } = renderApp()
+    const { router } = renderApp('/find-your-stay')
     const user = await completeSearch()
 
     await user.type(screen.getByLabelText('Guests'), '{Enter}')
 
     expect(
       await screen.findByRole('heading', {
-        name: /your room search starts here/i,
+        name: /a room for the way you travel/i,
       }),
     ).toBeInTheDocument()
     expect(router.state.location.pathname).toBe('/rooms')

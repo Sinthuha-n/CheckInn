@@ -22,6 +22,20 @@ describe('authentication routes', () => {
     ).toBeInTheDocument()
   })
 
+  it.each([
+    '/find-your-stay',
+    '/rooms',
+    '/rooms/7',
+    '/rooms/7/book',
+    '/bookings/18/confirmation',
+    '/my-bookings',
+  ])('protects %s from anonymous visitors', async (path) => {
+    const { router } = renderApp(path)
+
+    expect(await screen.findByRole('heading', { name: /welcome back/i })).toBeInTheDocument()
+    expect(router.state.location.state).toEqual({ from: path })
+  })
+
   it('signs in and returns to the protected destination', async () => {
     const user = userEvent.setup()
     const session = createSession()
@@ -36,7 +50,7 @@ describe('authentication routes', () => {
 
     expect(
       await screen.findByRole('heading', {
-        name: /your room search starts here/i,
+        name: /a room for the way you travel/i,
       }),
     ).toBeInTheDocument()
     expect(authStorage.read()).toEqual(session)
@@ -97,7 +111,7 @@ describe('authentication routes', () => {
     resolveLogin(jsonResponse(session))
     expect(
       await screen.findByRole('heading', {
-        name: /your room search starts here/i,
+        name: /where will you rest next/i,
       }),
     ).toBeInTheDocument()
   })
@@ -145,7 +159,7 @@ describe('authentication routes', () => {
 
     expect(
       await screen.findByRole('heading', {
-        name: /your room search starts here/i,
+        name: /a room for the way you travel/i,
       }),
     ).toBeInTheDocument()
     expect(authStorage.read()).toEqual(session)
@@ -186,7 +200,7 @@ describe('authentication routes', () => {
     )
     expect(router.state.location.state).toEqual({
       email: 'avery@example.com',
-      from: '/rooms',
+      from: '/find-your-stay',
       registrationComplete: true,
     })
   })

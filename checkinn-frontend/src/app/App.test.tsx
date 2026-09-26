@@ -56,7 +56,7 @@ describe('CheckInn application', () => {
     expect(
       await screen.findByRole('heading', { name: /welcome back/i }),
     ).toBeInTheDocument()
-    expect(router.state.location.state).toEqual({ from: '/rooms' })
+    expect(router.state.location.state).toEqual({ from: '/find-your-stay' })
     expect(
       screen.queryByRole('search', { name: /search available rooms/i }),
     ).not.toBeInTheDocument()
@@ -69,10 +69,17 @@ describe('CheckInn application', () => {
 
     await user.click(screen.getByRole('link', { name: /plan your stay/i }))
 
-    expect(router.state.location.pathname).toBe('/rooms')
+    expect(router.state.location.pathname).toBe('/find-your-stay')
     expect(
-      screen.getByRole('heading', { name: /your room search starts here/i }),
+      screen.getByRole('heading', { name: /where will you rest next/i }),
     ).toBeInTheDocument()
+  })
+
+  it('keeps search and experience content off the public landing page', () => {
+    renderApp()
+
+    expect(screen.queryByRole('search', { name: /search available rooms/i })).not.toBeInTheDocument()
+    expect(screen.queryByText(/a quieter way to book well/i)).not.toBeInTheDocument()
   })
 
   it('renders the branded not-found route and returns home', async () => {

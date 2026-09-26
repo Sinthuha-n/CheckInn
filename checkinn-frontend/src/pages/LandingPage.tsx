@@ -1,9 +1,8 @@
-import { ArrowDown, ArrowUpRight, KeyRound } from 'lucide-react'
+import { ArrowDown, ArrowUpRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import courtyardImage from '../assets/editorial/checkinn-courtyard.jpg'
+import { Footer } from '../components/layout/Footer'
 import { Container } from '../components/ui/Container'
 import { useAuth } from '../features/auth/useAuth'
-import { RoomSearchForm } from '../features/rooms/components/RoomSearchForm'
 
 const benefits = [
   {
@@ -27,8 +26,8 @@ export function LandingPage() {
   const { isAuthenticated } = useAuth()
 
   return (
-    <>
-      <section className="landing-hero" aria-labelledby="landing-title">
+    <div className="landing-page">
+      <section className="landing-hero landing-panel" aria-labelledby="landing-title">
         <Container className="landing-hero__layout">
           <div className="landing-hero__content">
             <p className="eyebrow">
@@ -44,8 +43,8 @@ export function LandingPage() {
             </p>
             <Link
               className="button button--large button--primary"
-              state={isAuthenticated ? undefined : { from: '/rooms' }}
-              to={isAuthenticated ? '/rooms' : '/login'}
+              state={isAuthenticated ? undefined : { from: '/find-your-stay' }}
+              to={isAuthenticated ? '/find-your-stay' : '/login'}
             >
               Plan your stay
               <ArrowDown aria-hidden="true" size={18} />
@@ -62,58 +61,7 @@ export function LandingPage() {
         </Container>
       </section>
 
-      <section
-        className="search-section"
-        id="stay-search"
-        aria-labelledby="search-title"
-      >
-        <Container>
-          <div className="search-section__heading">
-            <div>
-              <p className="eyebrow eyebrow--dark">Find your stay</p>
-              <h2 id="search-title">Where will you rest next?</h2>
-            </div>
-            <p>
-              {isAuthenticated
-                ? 'Enter your dates and party size to continue to live room availability.'
-                : 'Enter your dates and party size. Sign in is required before live room availability can be shown.'}
-            </p>
-          </div>
-          <RoomSearchForm />
-        </Container>
-      </section>
-
-      <section className="experience-section" aria-labelledby="experience-title">
-        <Container className="experience-section__layout">
-          <figure className="experience-visual">
-            <img
-              alt="Sunlit hotel courtyard framed by limestone arches and tropical greenery"
-              decoding="async"
-              height="1024"
-              loading="lazy"
-              src={courtyardImage}
-              width="1536"
-            />
-            <figcaption>Spaces selected to make arrival feel effortless.</figcaption>
-          </figure>
-
-          <div className="experience-copy">
-            <p className="eyebrow eyebrow--dark">The CheckInn experience</p>
-            <h2 id="experience-title">A quieter way to book well.</h2>
-            <p>
-              CheckInn brings the essential parts of planning a stay into one
-              composed experience—so you can spend less time navigating and
-              more time looking forward to where you are going.
-            </p>
-            <div className="experience-copy__signature" aria-hidden="true">
-              <KeyRound size={19} strokeWidth={1.6} />
-              Thoughtful from search to stay
-            </div>
-          </div>
-        </Container>
-      </section>
-
-      <section className="benefits-section" aria-labelledby="benefits-title">
+      <section className="benefits-section landing-panel" aria-labelledby="benefits-title">
         <Container>
           <div className="section-heading">
             <p className="eyebrow eyebrow--dark">Why CheckInn</p>
@@ -135,7 +83,7 @@ export function LandingPage() {
         </Container>
       </section>
 
-      <section className="brand-story" aria-labelledby="brand-story-title">
+      <section className="brand-story landing-panel" aria-labelledby="brand-story-title">
         <Container className="brand-story__layout">
           <p className="brand-story__kicker">CheckInn</p>
           <div>
@@ -147,13 +95,14 @@ export function LandingPage() {
           </div>
           <Link
             className="brand-story__link"
-            to={isAuthenticated ? '/rooms' : '/register'}
+            to={isAuthenticated ? '/find-your-stay' : '/register'}
           >
             {isAuthenticated ? 'Explore available rooms' : 'Create your account'}
             <ArrowUpRight aria-hidden="true" size={18} />
           </Link>
         </Container>
       </section>
-    </>
+      <Footer />
+    </div>
   )
 }

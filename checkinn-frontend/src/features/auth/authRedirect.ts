@@ -9,7 +9,7 @@ const AUTH_PATHS = new Set(['/login', '/register'])
 
 export function getSafeAuthDestination(value: string | undefined) {
   if (!value?.startsWith('/') || value.startsWith('//') || value.includes('\\')) {
-    return '/rooms'
+    return '/find-your-stay'
   }
 
   try {
@@ -17,11 +17,11 @@ export function getSafeAuthDestination(value: string | undefined) {
     const normalizedPath = destination.pathname.replace(/\/$/, '') || '/'
 
     if (destination.origin !== APP_ORIGIN || AUTH_PATHS.has(normalizedPath)) {
-      return '/rooms'
+      return '/find-your-stay'
     }
 
     return `${destination.pathname}${destination.search}${destination.hash}`
   } catch {
-    return '/rooms'
+    return '/find-your-stay'
   }
 }

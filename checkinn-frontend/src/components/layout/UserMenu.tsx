@@ -1,4 +1,4 @@
-import { ChevronDown, DoorOpen, LogOut, ShieldCheck } from 'lucide-react'
+import { CalendarCheck, ChevronDown, DoorOpen, LogOut, ShieldCheck } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import type { LoginResponse } from '../../types/api'
@@ -71,9 +71,13 @@ export function UserMenu({ onLogout, onNavigate, session }: UserMenuProps) {
             <span>{session.email}</span>
           </div>
           <nav aria-label="Account navigation">
-            <NavLink onClick={closeMenu} to="/rooms">
+            <NavLink onClick={closeMenu} to="/find-your-stay">
               <DoorOpen aria-hidden="true" size={17} />
               Find a room
+            </NavLink>
+            <NavLink onClick={closeMenu} to="/my-bookings">
+              <CalendarCheck aria-hidden="true" size={17} />
+              My bookings
             </NavLink>
             {session.role === 'ADMIN' ? (
               <NavLink onClick={closeMenu} to="/admin">
