@@ -1,44 +1,84 @@
 import { ArrowRight, Sparkles } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { FormField } from '../components/ui/FormField'
+import { PasswordField } from '../components/ui/PasswordField'
 import { authApi } from '../features/auth/authApi'
+import {
+  getSafeAuthDestination,
+  type AuthRedirectState,
+} from '../features/auth/authRedirect'
+import {
+  validateRegistration,
+  type AuthFieldErrors,
+} from '../features/auth/authValidation'
+import { useAuth } from '../features/auth/useAuth'
 import { ApiError } from '../services/apiClient'
 
 export function RegisterPage() {
+  const location = useLocation()
   const navigate = useNavigate()
+  const { login } = useAuth()
+  const redirectState = (location.state as AuthRedirectState | null) ?? null
+  const destination = getSafeAuthDestination(redirectState?.from)
   const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(redirectState?.email ?? '')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<AuthFieldErrors>({})
+  const [submissionStage, setSubmissionStage] = useState<
+    'idle' | 'registering' | 'signing-in'
+  >('idle')
+  const isSubmitting = submissionStage !== 'idle'
+
+  const clearFieldError = (field: keyof AuthFieldErrors) => {
+    setError('')
+    setFieldErrors((current) => {
+      const next = { ...current }
+      delete next[field]
+      return next
+    })
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError('')
     setFieldErrors({})
 
-    if (password !== confirmPassword) {
-      setFieldErrors({ confirmPassword: 'Passwords must match' })
+    const validationErrors = validateRegistration({
+      name,
+      email,
+      password,
+      confirmPassword,
+    })
+
+    if (Object.keys(validationErrors).length > 0) {
+      setFieldErrors(validationErrors)
       return
     }
 
-    if (password.length < 8) {
-      setFieldErrors({ password: 'Password must contain at least 8 characters' })
-      return
-    }
-
-    setIsSubmitting(true)
+    const credentials = { email: email.trim(), password }
+    setSubmissionStage('registering')
 
     try {
-      await authApi.register({ name: name.trim(), email: email.trim(), password })
-      navigate('/login', {
-        replace: true,
-        state: { email: email.trim(), registrationComplete: true },
-      })
+      await authApi.register({ name: name.trim(), ...credentials })
+
+      try {
+        setSubmissionStage('signing-in')
+        await login(credentials)
+        navigate(destination, { replace: true })
+      } catch {
+        navigate('/login', {
+          replace: true,
+          state: {
+            email: credentials.email,
+            from: destination,
+            registrationComplete: true,
+          } satisfies AuthRedirectState,
+        })
+      }
     } catch (caughtError) {
       if (caughtError instanceof ApiError) {
         setError(caughtError.message)
@@ -47,7 +87,7 @@ export function RegisterPage() {
         setError('Something unexpected happened. Please try again.')
       }
     } finally {
-      setIsSubmitting(false)
+      setSubmissionStage('idle')
     }
   }
 
@@ -77,56 +117,85 @@ export function RegisterPage() {
             </p>
           ) : null}
 
-          <form className="auth-form" onSubmit={handleSubmit} noValidate>
+          <form
+            aria-busy={isSubmitting}
+            className="auth-form"
+            onSubmit={handleSubmit}
+            noValidate
+          >
             <FormField
               autoComplete="name"
+              disabled={isSubmitting}
               error={fieldErrors.name}
               label="Full name"
               name="name"
-              onChange={(event) => setName(event.target.value)}
+              onChange={(event) => {
+                setName(event.target.value)
+                clearFieldError('name')
+              }}
               required
               value={name}
             />
             <FormField
               autoComplete="email"
+              disabled={isSubmitting}
               error={fieldErrors.email}
               label="Email address"
               name="email"
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(event) => {
+                setEmail(event.target.value)
+                clearFieldError('email')
+              }}
               placeholder="you@example.com"
               required
               type="email"
               value={email}
             />
-            <FormField
+            <PasswordField
               autoComplete="new-password"
+              disabled={isSubmitting}
               error={fieldErrors.password}
               hint="Use at least 8 characters."
               label="Password"
               name="password"
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={(event) => {
+                setPassword(event.target.value)
+                clearFieldError('password')
+              }}
               required
-              type="password"
               value={password}
             />
-            <FormField
+            <PasswordField
               autoComplete="new-password"
+              disabled={isSubmitting}
               error={fieldErrors.confirmPassword}
               label="Confirm password"
               name="confirmPassword"
-              onChange={(event) => setConfirmPassword(event.target.value)}
+              onChange={(event) => {
+                setConfirmPassword(event.target.value)
+                clearFieldError('confirmPassword')
+              }}
               required
-              type="password"
               value={confirmPassword}
             />
             <Button disabled={isSubmitting} size="large" type="submit">
-              {isSubmitting ? 'Creating account…' : 'Create account'}
+              {submissionStage === 'registering'
+                ? 'Creating account…'
+                : submissionStage === 'signing-in'
+                  ? 'Signing you in…'
+                  : 'Create account'}
               {!isSubmitting ? <ArrowRight aria-hidden="true" size={18} /> : null}
             </Button>
           </form>
 
           <p className="auth-form-wrap__switch">
-            Already a guest? <Link to="/login">Sign in</Link>
+            Already a guest?{' '}
+            <Link
+              state={{ email: email.trim() || undefined, from: destination }}
+              to="/login"
+            >
+              Sign in
+            </Link>
           </p>
         </div>
       </div>
