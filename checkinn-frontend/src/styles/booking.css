@@ -75,6 +75,81 @@
   gap: var(--space-5);
 }
 
+.room-results {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.room-controls {
+  display: grid;
+  grid-template-columns: auto repeat(3, minmax(10rem, 1fr)) auto;
+  align-items: end;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-block: var(--border-subtle);
+}
+
+.room-controls__summary {
+  display: grid;
+  min-width: 5rem;
+  padding-bottom: var(--space-2);
+}
+
+.room-controls__summary strong {
+  color: var(--color-navy-950);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  line-height: 0.8;
+}
+
+.room-controls__summary span,
+.room-controls label > span {
+  color: var(--color-stone-500);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.room-controls label {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-2);
+}
+
+.room-controls select,
+.room-controls input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding-inline: var(--space-3);
+  border: var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  color: var(--color-navy-950);
+  font: inherit;
+}
+
+.room-controls select:focus-visible,
+.room-controls input:focus-visible {
+  outline: 2px solid var(--color-gold-500);
+  outline-offset: 2px;
+}
+
+.room-controls__reset {
+  min-height: 2.75rem;
+  padding-inline: var(--space-3);
+  border: 0;
+  background: transparent;
+  color: var(--color-gold-700);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.room-controls__reset:disabled {
+  color: var(--color-stone-500);
+  cursor: default;
+  opacity: 0.55;
+}
+
 .room-card,
 .booking-card,
 .room-detail,
@@ -367,6 +442,14 @@
     grid-template-columns: 1fr;
   }
 
+  .room-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .room-controls__summary {
+    grid-column: 1 / -1;
+  }
+
   .search-summary {
     justify-items: start;
   }
@@ -386,6 +469,18 @@
 }
 
 @media (max-width: 36rem) {
+  .room-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .room-controls__summary {
+    grid-column: auto;
+  }
+
+  .room-controls__reset {
+    justify-self: start;
+  }
+
   .booking-review__summary {
     grid-template-columns: 1fr;
   }
