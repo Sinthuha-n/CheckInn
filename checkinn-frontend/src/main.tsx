@@ -12,6 +12,7 @@ import './styles/global.css'
 import './styles/auth.css'
 import './styles/landing.css'
 import './styles/booking.css'
+import './styles/admin.css'
 import { AppProviders } from './app/AppProviders'
 import { router } from './app/router'
 

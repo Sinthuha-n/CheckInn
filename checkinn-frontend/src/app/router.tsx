@@ -5,7 +5,7 @@ import {
   ProtectedRoute,
   RoleRoute,
 } from '../features/auth/routeGuards'
-import { FeaturePreviewPage } from '../pages/FeaturePreviewPage'
+import { AdminRoomsPage } from '../pages/AdminRoomsPage'
 import { BookingConfirmationPage } from '../pages/BookingConfirmationPage'
 import { BookingPage } from '../pages/BookingPage'
 import { FindYourStayPage } from '../pages/FindYourStayPage'
@@ -61,7 +61,7 @@ export const appRoutes: RouteObject[] = [
             children: [
               {
                 path: 'admin',
-                element: <FeaturePreviewPage area="admin" />,
+                element: <AdminRoomsPage />,
               },
             ],
           },

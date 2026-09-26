@@ -257,13 +257,14 @@ describe('authentication routes', () => {
   it('allows administrators to reach admin from the profile menu', async () => {
     const user = userEvent.setup()
     authStorage.write(createSession('ADMIN'))
+    vi.mocked(fetch).mockResolvedValue(jsonResponse([]))
     renderApp('/rooms')
 
     await user.click(screen.getByRole('button', { name: /admin guest/i }))
     await user.click(screen.getByRole('link', { name: /admin workspace/i }))
 
     expect(
-      screen.getByRole('heading', { name: /operations desk is ready/i }),
+      await screen.findByRole('heading', { name: /room inventory/i }),
     ).toBeInTheDocument()
   })
 })
