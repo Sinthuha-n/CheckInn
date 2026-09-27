@@ -13,6 +13,8 @@ const room: Room = {
   pricePerNight: 24000,
   capacity: 3,
   available: true,
+  bedConfiguration: '1 King Bed',
+  amenities: ['Free Wi-Fi'],
 }
 
 const booking: BookingResponse = {

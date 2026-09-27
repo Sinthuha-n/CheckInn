@@ -10,6 +10,8 @@ const rooms: Room[] = [
     pricePerNight: 24000,
     capacity: 3,
     available: true,
+    bedConfiguration: '1 King Bed',
+    amenities: ['Free Wi-Fi'],
   },
   {
     id: 2,
@@ -19,6 +21,8 @@ const rooms: Room[] = [
     pricePerNight: 32000,
     capacity: 5,
     available: true,
+    bedConfiguration: '2 Queen Beds + 1 Single Bed',
+    amenities: ['Free Wi-Fi'],
   },
 ]
 
@@ -51,4 +55,3 @@ describe('room filters', () => {
     expect(rooms.map((room) => room.id)).toEqual(originalOrder)
   })
 })
-

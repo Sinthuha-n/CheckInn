@@ -1,9 +1,11 @@
-import { CalendarDays, Search, Users } from 'lucide-react'
+import { CalendarDays, Minus, Plus, Search, Users } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../../../components/ui/Button'
 import {
   getNextIsoDate,
+  MAX_SINGLE_ROOM_GUESTS,
+  MIN_SINGLE_ROOM_GUESTS,
   serializeRoomSearch,
   toLocalIsoDate,
   validateRoomSearch,
@@ -19,7 +21,7 @@ interface SearchFormValues {
 const initialValues: SearchFormValues = {
   checkIn: '',
   checkOut: '',
-  guests: '2',
+  guests: String(MIN_SINGLE_ROOM_GUESTS),
 }
 
 export function RoomSearchForm() {
@@ -59,6 +61,21 @@ export function RoomSearchForm() {
 
     navigate(`/rooms?${serializeRoomSearch(search)}`)
   }
+
+  const adjustGuests = (amount: number) => {
+    const currentGuests = Number(values.guests)
+    const nextGuests = Number.isInteger(currentGuests)
+      ? Math.min(
+          MAX_SINGLE_ROOM_GUESTS,
+          Math.max(MIN_SINGLE_ROOM_GUESTS, currentGuests + amount),
+        )
+      : MIN_SINGLE_ROOM_GUESTS
+
+    updateValue('guests', String(nextGuests))
+  }
+
+  const guestCount = Number(values.guests)
+  const hasWholeGuestCount = Number.isInteger(guestCount)
 
   const checkoutMinimum = values.checkIn
     ? getNextIsoDate(values.checkIn)
@@ -131,18 +148,50 @@ export function RoomSearchForm() {
           <Users aria-hidden="true" size={18} />
           Guests
         </label>
-        <input
-          aria-describedby={errors.guests ? 'search-guests-error' : undefined}
-          aria-invalid={Boolean(errors.guests)}
-          id="search-guests"
-          inputMode="numeric"
-          min="1"
-          onChange={(event) => updateValue('guests', event.target.value)}
-          required
-          step="1"
-          type="number"
-          value={values.guests}
-        />
+        <div className="stay-search__stepper">
+          <button
+            aria-label="Decrease guests"
+            disabled={
+              !hasWholeGuestCount || guestCount <= MIN_SINGLE_ROOM_GUESTS
+            }
+            onClick={() => adjustGuests(-1)}
+            title="Decrease guests"
+            type="button"
+          >
+            <Minus aria-hidden="true" size={17} />
+          </button>
+          <div className="stay-search__stepper-value">
+            <input
+              aria-describedby={
+                errors.guests ? 'search-guests-error' : undefined
+              }
+              aria-invalid={Boolean(errors.guests)}
+              id="search-guests"
+              inputMode="numeric"
+              max={MAX_SINGLE_ROOM_GUESTS}
+              min={MIN_SINGLE_ROOM_GUESTS}
+              onChange={(event) => updateValue('guests', event.target.value)}
+              required
+              step="1"
+              type="number"
+              value={values.guests}
+            />
+            <span aria-live="polite">
+              {guestCount === 1 ? 'guest' : 'guests'}
+            </span>
+          </div>
+          <button
+            aria-label="Increase guests"
+            disabled={
+              hasWholeGuestCount && guestCount >= MAX_SINGLE_ROOM_GUESTS
+            }
+            onClick={() => adjustGuests(1)}
+            title="Increase guests"
+            type="button"
+          >
+            <Plus aria-hidden="true" size={17} />
+          </button>
+        </div>
         {errors.guests ? (
           <span
             className="stay-search__error"
