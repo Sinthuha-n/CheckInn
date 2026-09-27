@@ -1,5 +1,6 @@
 import {
   getNextIsoDate,
+  MAX_SINGLE_ROOM_GUESTS,
   serializeRoomSearch,
   toLocalIsoDate,
   validateRoomSearch,
@@ -33,6 +34,26 @@ describe('room search helpers', () => {
       checkIn: 'Check-in cannot be in the past',
       checkOut: 'Check-out must be after check-in',
     })
+  })
+
+  it.each([
+    { guests: 0, message: 'Guests must be a whole number of at least 1' },
+    { guests: 1.5, message: 'Guests must be a whole number of at least 1' },
+    {
+      guests: MAX_SINGLE_ROOM_GUESTS + 1,
+      message: 'A single room can accommodate up to 8 guests',
+    },
+  ])('rejects an unsupported guest count of $guests', ({ guests, message }) => {
+    expect(
+      validateRoomSearch(
+        {
+          checkIn: '2026-10-03',
+          checkOut: '2026-10-06',
+          guests,
+        },
+        today,
+      ).guests,
+    ).toBe(message)
   })
 
   it('serializes a valid search in the public URL contract order', () => {

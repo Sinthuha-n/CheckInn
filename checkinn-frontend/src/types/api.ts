@@ -36,6 +36,8 @@ export interface Room {
   pricePerNight: number
   capacity: number
   available: boolean
+  bedConfiguration: string | null
+  amenities: string[]
 }
 
 export interface BookingRequest {

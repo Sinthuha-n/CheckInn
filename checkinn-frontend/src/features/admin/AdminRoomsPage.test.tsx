@@ -14,6 +14,8 @@ const rooms: Room[] = [
     pricePerNight: 24000,
     capacity: 3,
     available: true,
+    bedConfiguration: '1 King Bed',
+    amenities: ['Free Wi-Fi'],
   },
   {
     id: 2,
@@ -23,6 +25,8 @@ const rooms: Room[] = [
     pricePerNight: 36000,
     capacity: 5,
     available: false,
+    bedConfiguration: '2 Queen Beds + 1 Single Bed',
+    amenities: ['Free Wi-Fi'],
   },
 ]
 

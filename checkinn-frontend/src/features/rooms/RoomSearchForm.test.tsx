@@ -18,6 +18,37 @@ describe('authenticated room search', () => {
     return user
   }
 
+  it('starts at one guest and keeps the stepper within single-room limits', async () => {
+    authStorage.write(createSession())
+    const user = userEvent.setup()
+    renderApp('/find-your-stay')
+
+    const guestInput = screen.getByLabelText('Guests')
+    const decreaseButton = screen.getByRole('button', {
+      name: 'Decrease guests',
+    })
+    const increaseButton = screen.getByRole('button', {
+      name: 'Increase guests',
+    })
+
+    expect(guestInput).toHaveValue(1)
+    expect(screen.getByText('guest')).toBeInTheDocument()
+    expect(decreaseButton).toBeDisabled()
+
+    await user.click(increaseButton)
+
+    expect(guestInput).toHaveValue(2)
+    expect(screen.getByText('guests')).toBeInTheDocument()
+    expect(decreaseButton).toBeEnabled()
+
+    await user.clear(guestInput)
+    await user.type(guestInput, '8')
+
+    expect(increaseButton).toBeDisabled()
+    await user.click(decreaseButton)
+    expect(guestInput).toHaveValue(7)
+  })
+
   it('shows accessible inline validation for an incomplete search', async () => {
     authStorage.write(createSession())
     const user = userEvent.setup()
@@ -36,6 +67,22 @@ describe('authenticated room search', () => {
       'aria-invalid',
       'true',
     )
+  })
+
+  it('rejects a guest count above the largest single-room capacity', async () => {
+    authStorage.write(createSession())
+    const user = userEvent.setup()
+    renderApp('/find-your-stay')
+
+    const guestInput = screen.getByLabelText('Guests')
+    await user.clear(guestInput)
+    await user.type(guestInput, '9')
+    await user.click(screen.getByRole('button', { name: /find a room/i }))
+
+    expect(
+      screen.getByText('A single room can accommodate up to 8 guests'),
+    ).toBeInTheDocument()
+    expect(guestInput).toHaveAttribute('aria-invalid', 'true')
   })
 
   it('redirects anonymous visitors to sign in before showing search', async () => {

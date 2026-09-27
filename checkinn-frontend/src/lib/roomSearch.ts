@@ -2,6 +2,9 @@ import type { RoomSearchErrors, RoomSearchParams } from '../types/search'
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
+export const MIN_SINGLE_ROOM_GUESTS = 1
+export const MAX_SINGLE_ROOM_GUESTS = 8
+
 const padDatePart = (value: number) => String(value).padStart(2, '0')
 
 export function toLocalIsoDate(date = new Date()) {
@@ -46,8 +49,13 @@ export function validateRoomSearch(
     errors.checkOut = 'Check-out must be after check-in'
   }
 
-  if (!Number.isInteger(values.guests) || values.guests < 1) {
+  if (
+    !Number.isInteger(values.guests) ||
+    values.guests < MIN_SINGLE_ROOM_GUESTS
+  ) {
     errors.guests = 'Guests must be a whole number of at least 1'
+  } else if (values.guests > MAX_SINGLE_ROOM_GUESTS) {
+    errors.guests = 'A single room can accommodate up to 8 guests'
   }
 
   return errors
