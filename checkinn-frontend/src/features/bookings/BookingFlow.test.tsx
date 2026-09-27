@@ -60,6 +60,46 @@ describe('protected booking flow', () => {
     )
   })
 
+  it('does not call availability for a multi-room request', async () => {
+    renderApp(
+      '/rooms?checkIn=2030-06-12&checkOut=2030-06-15&guests=10&rooms=2',
+    )
+
+    expect(
+      screen.getByRole('heading', {
+        name: /multi-room reservations are not available yet/i,
+      }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/10 guests · 2 rooms/i)).toBeInTheDocument()
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('blocks direct multi-room room details without loading one room', () => {
+    renderApp(
+      '/rooms/7?checkIn=2030-06-12&checkOut=2030-06-15&guests=10&rooms=2',
+    )
+
+    expect(
+      screen.getByRole('heading', {
+        name: /choose rooms together, not one at a time/i,
+      }),
+    ).toBeInTheDocument()
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('blocks direct multi-room booking without submitting a booking', () => {
+    renderApp(
+      '/rooms/7/book?checkIn=2030-06-12&checkOut=2030-06-15&guests=10&rooms=2',
+    )
+
+    expect(
+      screen.getByRole('heading', {
+        name: /this request cannot be booked one room at a time/i,
+      }),
+    ).toBeInTheDocument()
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
   it('creates a booking and opens its confirmation page', async () => {
     const user = userEvent.setup()
     vi.mocked(fetch)

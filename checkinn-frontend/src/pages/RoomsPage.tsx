@@ -31,20 +31,30 @@ export function RoomsPage() {
   const checkIn = search?.checkIn
   const checkOut = search?.checkOut
   const guests = search?.guests
+  const requestedRooms = search?.rooms
+  const isMultiRoomSearch = Boolean(requestedRooms && requestedRooms > 1)
   const [rooms, setRooms] = useState<Room[]>([])
   const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(Boolean(search))
+  const [isLoading, setIsLoading] = useState(
+    Boolean(search && search.rooms === 1),
+  )
   const [requestKey, setRequestKey] = useState(0)
 
   useEffect(() => {
-    if (!checkIn || !checkOut || !guests || !session) {
+    if (
+      !checkIn ||
+      !checkOut ||
+      !guests ||
+      requestedRooms !== 1 ||
+      !session
+    ) {
       return
     }
 
     let active = true
 
     roomApi
-      .available({ checkIn, checkOut, guests }, session.token)
+      .available({ checkIn, checkOut, guests, rooms: 1 }, session.token)
       .then((result) => {
         if (active) {
           setRooms(
@@ -72,7 +82,7 @@ export function RoomsPage() {
     return () => {
       active = false
     }
-  }, [checkIn, checkOut, guests, requestKey, session])
+  }, [checkIn, checkOut, guests, requestedRooms, requestKey, session])
 
   const roomTypes = useMemo(
     () =>
@@ -138,6 +148,37 @@ export function RoomsPage() {
     )
   }
 
+  if (isMultiRoomSearch) {
+    return (
+      <section className="rooms-page" aria-labelledby="rooms-title">
+        <Container>
+          <div className="booking-heading">
+            <div>
+              <p className="eyebrow eyebrow--dark">Multi-room search</p>
+              <h1 id="rooms-title">Your group needs a coordinated stay.</h1>
+            </div>
+            <div className="search-summary" aria-label="Current stay search">
+              <span>{search.checkIn} → {search.checkOut}</span>
+              <span>{search.guests} guests · {search.rooms} rooms</span>
+              <Link to="/find-your-stay">Change search</Link>
+            </div>
+          </div>
+          <div className="booking-status" role="status">
+            <h2>Multi-room reservations are not available yet.</h2>
+            <p>
+              CheckInn currently confirms one room per booking. We will not show
+              individual rooms as a complete group solution until the backend
+              can reserve every selected room atomically.
+            </p>
+            <Link className="button button--secondary" to="/find-your-stay">
+              Change room request
+            </Link>
+          </div>
+        </Container>
+      </section>
+    )
+  }
+
   return (
     <section className="rooms-page" aria-labelledby="rooms-title">
       <Container>
@@ -149,6 +190,7 @@ export function RoomsPage() {
           <div className="search-summary" aria-label="Current stay search">
             <span>{search.checkIn} → {search.checkOut}</span>
             <span>{search.guests} {search.guests === 1 ? 'guest' : 'guests'}</span>
+            <span>1 room</span>
             <Link to="/find-your-stay">Change search</Link>
           </div>
         </div>

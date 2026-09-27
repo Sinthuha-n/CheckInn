@@ -14,13 +14,14 @@ export function RoomDetailsPage() {
   const location = useLocation()
   const { session } = useAuth()
   const search = parseRoomSearch(location.search)
+  const isMultiRoomSearch = Boolean(search && search.rooms > 1)
   const numericRoomId = Number(roomId)
   const invalidRoomId = !Number.isInteger(numericRoomId)
   const [room, setRoom] = useState<Room | null>(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!session || invalidRoomId) {
+    if (!session || invalidRoomId || isMultiRoomSearch) {
       return
     }
 
@@ -29,9 +30,29 @@ export function RoomDetailsPage() {
       .catch((caughtError: unknown) => {
         setError(caughtError instanceof ApiError ? caughtError.message : 'This room could not be loaded.')
       })
-  }, [invalidRoomId, numericRoomId, session])
+  }, [invalidRoomId, isMultiRoomSearch, numericRoomId, session])
 
   const displayError = invalidRoomId ? 'This room could not be found.' : error
+
+  if (isMultiRoomSearch && search) {
+    return (
+      <section className="booking-page booking-page--centered">
+        <Container size="narrow">
+          <p className="eyebrow eyebrow--dark">Multi-room search</p>
+          <h1>Choose rooms together, not one at a time.</h1>
+          <p>
+            This request is for {search.guests} guests across {search.rooms}
+            {' '}rooms. Individual room details cannot continue to booking until
+            CheckInn supports an atomic multi-room reservation.
+          </p>
+          <Link className="button button--primary button--large" to={`/rooms${location.search}`}>
+            Return to room request
+            <ArrowRight aria-hidden="true" size={18} />
+          </Link>
+        </Container>
+      </section>
+    )
+  }
 
   return (
     <section className="booking-page" aria-labelledby="room-details-title">

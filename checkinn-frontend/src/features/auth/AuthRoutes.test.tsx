@@ -41,7 +41,7 @@ describe('authentication routes', () => {
     const session = createSession()
     vi.mocked(fetch).mockResolvedValue(jsonResponse(session))
     const { router } = renderApp(
-      '/rooms?checkIn=2030-06-12&checkOut=2030-06-15&guests=3',
+      '/rooms?checkIn=2030-06-12&checkOut=2030-06-15&guests=3&rooms=1',
     )
 
     await user.type(screen.getByLabelText(/email address/i), session.email)
@@ -57,7 +57,7 @@ describe('authentication routes', () => {
     expect(screen.getByText(session.name)).toBeInTheDocument()
     expect(router.state.location.pathname).toBe('/rooms')
     expect(router.state.location.search).toBe(
-      '?checkIn=2030-06-12&checkOut=2030-06-15&guests=3',
+      '?checkIn=2030-06-12&checkOut=2030-06-15&guests=3&rooms=1',
     )
   })
 
@@ -147,7 +147,7 @@ describe('authentication routes', () => {
       )
       .mockResolvedValueOnce(jsonResponse(session))
     const { router } = renderApp(
-      '/rooms?checkIn=2030-06-12&checkOut=2030-06-15&guests=2#results',
+      '/rooms?checkIn=2030-06-12&checkOut=2030-06-15&guests=2&rooms=1#results',
     )
 
     await user.click(screen.getByRole('link', { name: /create an account/i }))
@@ -165,7 +165,7 @@ describe('authentication routes', () => {
     expect(authStorage.read()).toEqual(session)
     expect(router.state.location.pathname).toBe('/rooms')
     expect(router.state.location.search).toBe(
-      '?checkIn=2030-06-12&checkOut=2030-06-15&guests=2',
+      '?checkIn=2030-06-12&checkOut=2030-06-15&guests=2&rooms=1',
     )
     expect(router.state.location.hash).toBe('#results')
   })

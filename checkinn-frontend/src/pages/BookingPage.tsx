@@ -23,6 +23,7 @@ export function BookingPage() {
   const navigate = useNavigate()
   const { session } = useAuth()
   const search = parseRoomSearch(location.search)
+  const isMultiRoomSearch = Boolean(search && search.rooms > 1)
   const numericRoomId = Number(roomId)
   const invalidRoomId = !Number.isInteger(numericRoomId)
   const [room, setRoom] = useState<Room | null>(null)
@@ -30,7 +31,7 @@ export function BookingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    if (!session || invalidRoomId) {
+    if (!session || invalidRoomId || isMultiRoomSearch) {
       return
     }
 
@@ -39,7 +40,7 @@ export function BookingPage() {
       .catch((caughtError: unknown) => {
         setError(caughtError instanceof ApiError ? caughtError.message : 'This room could not be loaded.')
       })
-  }, [invalidRoomId, numericRoomId, session])
+  }, [invalidRoomId, isMultiRoomSearch, numericRoomId, session])
 
   if (!search) {
     return (
@@ -50,6 +51,26 @@ export function BookingPage() {
           <p>Your stay dates and guest count are needed to confirm this room.</p>
           <Link className="button button--primary button--large" to="/find-your-stay">
             Find your stay
+            <ArrowRight aria-hidden="true" size={18} />
+          </Link>
+        </Container>
+      </section>
+    )
+  }
+
+  if (isMultiRoomSearch) {
+    return (
+      <section className="booking-page booking-page--centered">
+        <Container size="narrow">
+          <p className="eyebrow eyebrow--dark">Multi-room booking</p>
+          <h1>This request cannot be booked one room at a time.</h1>
+          <p>
+            Your search includes {search.guests} guests across {search.rooms}
+            {' '}rooms. No booking has been submitted because the backend does
+            not yet support atomic multi-room reservations.
+          </p>
+          <Link className="button button--primary button--large" to={`/rooms${location.search}`}>
+            Return to room request
             <ArrowRight aria-hidden="true" size={18} />
           </Link>
         </Container>

@@ -1,10 +1,13 @@
-import { CalendarDays, Minus, Plus, Search, Users } from 'lucide-react'
+import { BedDouble, CalendarDays, Minus, Plus, Search, Users } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../../../components/ui/Button'
 import {
   getNextIsoDate,
+  MAX_ROOMS,
   MAX_SINGLE_ROOM_GUESTS,
+  MAX_TOTAL_GUESTS,
+  MIN_ROOMS,
   MIN_SINGLE_ROOM_GUESTS,
   serializeRoomSearch,
   toLocalIsoDate,
@@ -16,12 +19,14 @@ interface SearchFormValues {
   checkIn: string
   checkOut: string
   guests: string
+  rooms: string
 }
 
 const initialValues: SearchFormValues = {
   checkIn: '',
   checkOut: '',
   guests: String(MIN_SINGLE_ROOM_GUESTS),
+  rooms: String(MIN_ROOMS),
 }
 
 export function RoomSearchForm() {
@@ -31,13 +36,40 @@ export function RoomSearchForm() {
   const [errors, setErrors] = useState<RoomSearchErrors>({})
 
   const updateValue = (field: keyof SearchFormValues, value: string) => {
-    setValues((current) => ({ ...current, [field]: value }))
+    setValues((current) => {
+      if (field !== 'guests') {
+        return { ...current, [field]: value }
+      }
+
+      const guests = Number(value)
+      const currentRooms = Number(current.rooms)
+
+      if (
+        !Number.isInteger(guests) ||
+        guests < MIN_SINGLE_ROOM_GUESTS ||
+        guests > MAX_TOTAL_GUESTS
+      ) {
+        return { ...current, guests: value }
+      }
+
+      const minimumRooms = Math.ceil(guests / MAX_SINGLE_ROOM_GUESTS)
+      const maximumRooms = Math.min(MAX_ROOMS, guests)
+      const rooms = Number.isInteger(currentRooms)
+        ? Math.min(maximumRooms, Math.max(minimumRooms, currentRooms))
+        : minimumRooms
+
+      return { ...current, guests: value, rooms: String(rooms) }
+    })
     setErrors((current) => {
       const next = { ...current }
       delete next[field]
 
       if (field === 'checkIn') {
         delete next.checkOut
+      }
+
+      if (field === 'guests') {
+        delete next.rooms
       }
 
       return next
@@ -51,6 +83,7 @@ export function RoomSearchForm() {
       checkIn: values.checkIn,
       checkOut: values.checkOut,
       guests: Number(values.guests),
+      rooms: Number(values.rooms),
     }
     const nextErrors = validateRoomSearch(search, today)
 
@@ -66,7 +99,7 @@ export function RoomSearchForm() {
     const currentGuests = Number(values.guests)
     const nextGuests = Number.isInteger(currentGuests)
       ? Math.min(
-          MAX_SINGLE_ROOM_GUESTS,
+          MAX_TOTAL_GUESTS,
           Math.max(MIN_SINGLE_ROOM_GUESTS, currentGuests + amount),
         )
       : MIN_SINGLE_ROOM_GUESTS
@@ -74,8 +107,32 @@ export function RoomSearchForm() {
     updateValue('guests', String(nextGuests))
   }
 
+  const adjustRooms = (amount: number) => {
+    const guests = Number(values.guests)
+    const currentRooms = Number(values.rooms)
+    const minimumRooms = Number.isInteger(guests) && guests > 0
+      ? Math.ceil(guests / MAX_SINGLE_ROOM_GUESTS)
+      : MIN_ROOMS
+    const maximumRooms = Number.isInteger(guests) && guests > 0
+      ? Math.min(MAX_ROOMS, guests)
+      : MAX_ROOMS
+    const nextRooms = Number.isInteger(currentRooms)
+      ? Math.min(maximumRooms, Math.max(minimumRooms, currentRooms + amount))
+      : minimumRooms
+
+    updateValue('rooms', String(nextRooms))
+  }
+
   const guestCount = Number(values.guests)
   const hasWholeGuestCount = Number.isInteger(guestCount)
+  const roomCount = Number(values.rooms)
+  const hasWholeRoomCount = Number.isInteger(roomCount)
+  const minimumRoomCount = hasWholeGuestCount && guestCount > 0
+    ? Math.ceil(guestCount / MAX_SINGLE_ROOM_GUESTS)
+    : MIN_ROOMS
+  const maximumRoomCount = hasWholeGuestCount && guestCount > 0
+    ? Math.min(MAX_ROOMS, guestCount)
+    : MAX_ROOMS
 
   const checkoutMinimum = values.checkIn
     ? getNextIsoDate(values.checkIn)
@@ -168,7 +225,7 @@ export function RoomSearchForm() {
               aria-invalid={Boolean(errors.guests)}
               id="search-guests"
               inputMode="numeric"
-              max={MAX_SINGLE_ROOM_GUESTS}
+              max={MAX_TOTAL_GUESTS}
               min={MIN_SINGLE_ROOM_GUESTS}
               onChange={(event) => updateValue('guests', event.target.value)}
               required
@@ -183,7 +240,7 @@ export function RoomSearchForm() {
           <button
             aria-label="Increase guests"
             disabled={
-              hasWholeGuestCount && guestCount >= MAX_SINGLE_ROOM_GUESTS
+              hasWholeGuestCount && guestCount >= MAX_TOTAL_GUESTS
             }
             onClick={() => adjustGuests(1)}
             title="Increase guests"
@@ -203,8 +260,62 @@ export function RoomSearchForm() {
         ) : null}
       </div>
 
+      <div className="stay-search__field">
+        <label htmlFor="search-rooms">
+          <BedDouble aria-hidden="true" size={18} />
+          Rooms
+        </label>
+        <div className="stay-search__stepper">
+          <button
+            aria-label="Decrease rooms"
+            disabled={!hasWholeRoomCount || roomCount <= minimumRoomCount}
+            onClick={() => adjustRooms(-1)}
+            title="Decrease rooms"
+            type="button"
+          >
+            <Minus aria-hidden="true" size={17} />
+          </button>
+          <div className="stay-search__stepper-value">
+            <input
+              aria-describedby={errors.rooms ? 'search-rooms-error' : undefined}
+              aria-invalid={Boolean(errors.rooms)}
+              id="search-rooms"
+              inputMode="numeric"
+              max={MAX_ROOMS}
+              min={MIN_ROOMS}
+              onChange={(event) => updateValue('rooms', event.target.value)}
+              required
+              step="1"
+              type="number"
+              value={values.rooms}
+            />
+            <span aria-live="polite">
+              {roomCount === 1 ? 'room' : 'rooms'}
+            </span>
+          </div>
+          <button
+            aria-label="Increase rooms"
+            disabled={!hasWholeRoomCount || roomCount >= maximumRoomCount}
+            onClick={() => adjustRooms(1)}
+            title="Increase rooms"
+            type="button"
+          >
+            <Plus aria-hidden="true" size={17} />
+          </button>
+        </div>
+        {errors.rooms ? (
+          <span
+            className="stay-search__error"
+            id="search-rooms-error"
+            role="alert"
+          >
+            {errors.rooms}
+          </span>
+        ) : null}
+      </div>
+
       <Button className="stay-search__submit" size="large" type="submit">
-        Find a room
+        Find rooms
         <Search aria-hidden="true" size={18} />
       </Button>
     </form>
