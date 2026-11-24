@@ -43,4 +43,20 @@ class ReviewRequestValidationTest {
                 violations.iterator().next().getMessage()
         );
     }
+
+    @Test
+    void shouldRejectCommentExceedingMaxLength() {
+        ReviewRequest request = new ReviewRequest();
+        request.setRoomId(7L);
+        request.setRating(5);
+        request.setComment("a".repeat(1001));
+
+        var violations = validator.validate(request);
+
+        assertEquals(1, violations.size());
+        assertEquals(
+                "Comment must not exceed 1000 characters",
+                violations.iterator().next().getMessage()
+        );
+    }
 }

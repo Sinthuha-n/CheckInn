@@ -27,6 +27,10 @@ public class Review {
     @JoinColumn(name = "room_id", nullable = false)
     private Room room;
 
+    @ManyToOne
+    @JoinColumn(name = "booking_id", nullable = false)
+    private Booking booking;
+
     public Review() {
     }
 
@@ -73,5 +77,13 @@ public class Review {
 
     public void setRoom(Room room) {
         this.room = room;
+    }
+
+    public Booking getBooking() {
+        return booking;
+    }
+
+    public void setBooking(Booking booking) {
+        this.booking = booking;
     }
 }

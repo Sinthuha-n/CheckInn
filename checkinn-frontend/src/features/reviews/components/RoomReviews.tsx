@@ -8,6 +8,7 @@ import { reviewApi } from '../reviewApi'
 interface RoomReviewsProps {
   roomId: number
   token: string
+  bookingId?: number
 }
 
 const ratingValues = [1, 2, 3, 4, 5]
@@ -40,7 +41,7 @@ function RatingStars({ rating }: { rating: number }) {
   )
 }
 
-export function RoomReviews({ roomId, token }: RoomReviewsProps) {
+export function RoomReviews({ roomId, token, bookingId }: RoomReviewsProps) {
   const [reviews, setReviews] = useState<ReviewResponse[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
@@ -104,7 +105,12 @@ export function RoomReviews({ roomId, token }: RoomReviewsProps) {
 
     try {
       const createdReview = await reviewApi.create(
-        { roomId, rating, comment: comment.trim() },
+        {
+          roomId,
+          ...(bookingId ? { bookingId } : {}),
+          rating,
+          comment: comment.trim(),
+        },
         token,
       )
       setReviews((current) => newestFirst([createdReview, ...current]))
