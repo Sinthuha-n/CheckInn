@@ -60,6 +60,9 @@ public class RoomService {
     }
 
     public void deleteRoom(Long id) {
+        if (!roomRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Room not found");
+        }
         roomRepository.deleteById(id);
     }
 
