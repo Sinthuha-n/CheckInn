@@ -39,6 +39,8 @@ public class RoomService {
         room.setPricePerNight(updatedRoom.getPricePerNight());
         room.setCapacity(updatedRoom.getCapacity());
         room.setAvailable(updatedRoom.getAvailable());
+        room.setBedConfiguration(updatedRoom.getBedConfiguration());
+        room.setAmenities(updatedRoom.getAmenities());
 
         return roomRepository.save(room);
     }

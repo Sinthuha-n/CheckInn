@@ -34,7 +34,8 @@ import static org.junit.jupiter.api.Assertions.*;
         "spring.jpa.hibernate.ddl-auto=create-drop",
         "spring.mail.host=localhost",
         "spring.mail.port=2525",
-        "jwt.secret=integration-test-secret-key-1234567890"
+        "jwt.secret=integration-test-secret-key-1234567890",
+        "checkinn.inventory.seed-enabled=false"
 })
 @Testcontainers
 class ConcurrentBookingIntegrationTest {

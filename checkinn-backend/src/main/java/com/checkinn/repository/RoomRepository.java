@@ -9,10 +9,15 @@ import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 public interface RoomRepository extends JpaRepository<Room, Long> {
+
+    List<Room> findAllByRoomNumberIn(
+            Collection<String> roomNumbers
+    );
 
     // Find rooms available for selected dates
     @Query("""

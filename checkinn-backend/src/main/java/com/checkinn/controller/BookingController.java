@@ -17,7 +17,7 @@ import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/bookings")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "${frontend.url:http://localhost:5173}")
 public class BookingController {
 
     private final BookingService bookingService;

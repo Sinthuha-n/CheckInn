@@ -2,6 +2,8 @@ package com.checkinn.entity;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "rooms")
@@ -17,6 +19,16 @@ public class Room {
     private BigDecimal pricePerNight;
     private Integer capacity;
     private Boolean available;
+    private String bedConfiguration;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "room_amenities",
+            joinColumns = @JoinColumn(name = "room_id")
+    )
+    @OrderColumn(name = "amenity_order")
+    @Column(name = "amenity", nullable = false)
+    private List<String> amenities = new ArrayList<>();
 
     public Room() {
     }
@@ -76,6 +88,26 @@ public class Room {
     public void setAvailable(Boolean available) {
         this.available = available;
     }
-}
 
+    public String getBedConfiguration() {
+        return bedConfiguration;
+    }
+
+    public void setBedConfiguration(String bedConfiguration) {
+        this.bedConfiguration = bedConfiguration;
+    }
+
+    public List<String> getAmenities() {
+        if (amenities == null) {
+            amenities = new ArrayList<>();
+        }
+        return amenities;
+    }
+
+    public void setAmenities(List<String> amenities) {
+        this.amenities = amenities == null
+                ? new ArrayList<>()
+                : new ArrayList<>(amenities);
+    }
+}
 
