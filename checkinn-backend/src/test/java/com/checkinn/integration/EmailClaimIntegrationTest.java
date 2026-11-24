@@ -29,7 +29,8 @@ import static org.junit.jupiter.api.Assertions.*;
         "jwt.secret=integration-test-secret-key-1234567890",
         "spring.mail.host=localhost",
         "spring.mail.port=2525",
-        "spring.jpa.hibernate.ddl-auto=create-drop"
+        "spring.jpa.hibernate.ddl-auto=create-drop",
+        "checkinn.inventory.seed-enabled=false"
 })
 @Testcontainers
 class EmailClaimIntegrationTest {

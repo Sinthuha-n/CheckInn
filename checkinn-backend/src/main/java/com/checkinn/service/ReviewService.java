@@ -5,6 +5,9 @@ import com.checkinn.dto.ReviewResponse;
 import com.checkinn.entity.Review;
 import com.checkinn.entity.Room;
 import com.checkinn.entity.User;
+import com.checkinn.exception.BadRequestException;
+import com.checkinn.exception.ConflictException;
+import com.checkinn.exception.ResourceNotFoundException;
 import com.checkinn.repository.ReviewRepository;
 import com.checkinn.repository.RoomRepository;
 import com.checkinn.repository.UserRepository;
@@ -36,19 +39,19 @@ public class ReviewService {
 
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found")
+                        new ResourceNotFoundException("User not found")
                 );
 
         Room room = roomRepository.findById(request.getRoomId())
                 .orElseThrow(() ->
-                        new RuntimeException("Room not found")
+                        new ResourceNotFoundException("Room not found")
                 );
 
         if (request.getRating() == null ||
                 request.getRating() < 1 ||
                 request.getRating() > 5) {
 
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Rating must be between 1 and 5"
             );
         }
@@ -57,7 +60,7 @@ public class ReviewService {
                 user.getId(),
                 room.getId()
         )) {
-            throw new RuntimeException(
+            throw new ConflictException(
                     "You have already reviewed this room"
             );
         }

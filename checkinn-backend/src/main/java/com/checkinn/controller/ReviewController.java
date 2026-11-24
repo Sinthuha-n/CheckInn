@@ -3,6 +3,7 @@ package com.checkinn.controller;
 import com.checkinn.dto.ReviewRequest;
 import com.checkinn.dto.ReviewResponse;
 import com.checkinn.service.ReviewService;
+import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,7 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/reviews")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "${frontend.url:http://localhost:5173}")
 public class ReviewController {
 
     private final ReviewService reviewService;
@@ -21,7 +22,7 @@ public class ReviewController {
 
     @PostMapping
     public ReviewResponse createReview(
-            @RequestBody ReviewRequest request,
+            @Valid @RequestBody ReviewRequest request,
             Authentication authentication
     ) {
 

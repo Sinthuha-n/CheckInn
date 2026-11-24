@@ -4,6 +4,14 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+# Environment files
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+credentials.json
+
 ### STS ###
 .apt_generated
 .classpath
@@ -31,3 +39,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Logs ###
+*.log
+logs/
