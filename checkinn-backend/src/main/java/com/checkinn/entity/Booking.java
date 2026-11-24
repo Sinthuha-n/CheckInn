@@ -95,4 +95,21 @@ public class Booking {
     public void setRoom(Room room) {
         this.room = room;
     }
+
+    public boolean isCompleted() {
+        if (status == BookingStatus.COMPLETED) {
+            return true;
+        }
+        if (status == BookingStatus.CONFIRMED && checkOutDate != null) {
+            return !LocalDate.now().isBefore(checkOutDate);
+        }
+        return false;
+    }
+
+    public boolean hasStarted() {
+        if (checkInDate == null) {
+            return false;
+        }
+        return !LocalDate.now().isBefore(checkInDate);
+    }
 }

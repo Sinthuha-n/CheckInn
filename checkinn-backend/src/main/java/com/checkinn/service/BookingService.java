@@ -6,6 +6,7 @@ import com.checkinn.entity.Booking;
 import com.checkinn.entity.Room;
 import com.checkinn.entity.User;
 import com.checkinn.enums.BookingStatus;
+import com.checkinn.enums.Role;
 import com.checkinn.exception.BadRequestException;
 import com.checkinn.exception.ConflictException;
 import com.checkinn.exception.ResourceNotFoundException;
@@ -162,7 +163,21 @@ public class BookingService {
         }
     }
 
+    public BookingStatus resolveEffectiveStatus(Booking booking) {
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+            return BookingStatus.CANCELLED;
+        }
+        if (booking.getStatus() == BookingStatus.COMPLETED) {
+            return BookingStatus.COMPLETED;
+        }
+        if (booking.getCheckOutDate() != null && !LocalDate.now().isBefore(booking.getCheckOutDate())) {
+            return BookingStatus.COMPLETED;
+        }
+        return booking.getStatus();
+    }
+
     private BookingResponse convertToResponse(Booking booking) {
+        BookingStatus effectiveStatus = resolveEffectiveStatus(booking);
 
         return new BookingResponse(
                 booking.getId(),
@@ -175,7 +190,7 @@ public class BookingService {
                 booking.getCheckOutDate(),
                 booking.getNumberOfGuests(),
                 booking.getTotalPrice(),
-                booking.getStatus().name()
+                effectiveStatus.name()
         );
     }
 
@@ -207,7 +222,9 @@ public class BookingService {
                         new ResourceNotFoundException("Booking not found")
                 );
 
-        if (!booking.getUser().getId().equals(user.getId())) {
+        boolean isOwner = booking.getUser().getId().equals(user.getId());
+        boolean isAdmin = user.getRole() == Role.ADMIN;
+        if (!isOwner && !isAdmin) {
             throw new ForbiddenException(
                     "You cannot cancel this booking"
             );
@@ -216,6 +233,31 @@ public class BookingService {
         if (booking.getStatus() == BookingStatus.CANCELLED) {
             throw new ConflictException(
                     "Booking is already cancelled"
+            );
+        }
+
+        if (booking.getStatus() == BookingStatus.COMPLETED) {
+            throw new BadRequestException(
+                    "Cannot cancel a completed booking"
+            );
+        }
+
+        LocalDate today = LocalDate.now();
+        if (booking.getCheckOutDate() != null && booking.getCheckOutDate().isBefore(today)) {
+            throw new BadRequestException(
+                    "Cannot cancel a past booking"
+            );
+        }
+
+        if (booking.getCheckOutDate() != null && !today.isBefore(booking.getCheckOutDate())) {
+            throw new BadRequestException(
+                    "Cannot cancel a completed booking"
+            );
+        }
+
+        if (booking.getCheckInDate() != null && !today.isBefore(booking.getCheckInDate())) {
+            throw new BadRequestException(
+                    "Cannot cancel a booking that has already started"
             );
         }
 
@@ -250,7 +292,9 @@ public class BookingService {
                         new ResourceNotFoundException("Booking not found")
                 );
 
-        if (!booking.getUser().getId().equals(user.getId())) {
+        boolean isOwner = booking.getUser().getId().equals(user.getId());
+        boolean isAdmin = user.getRole() == Role.ADMIN;
+        if (!isOwner && !isAdmin) {
             throw new ForbiddenException(
                     "You cannot access this booking"
             );
