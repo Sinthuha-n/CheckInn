@@ -15,13 +15,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -33,41 +28,21 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(properties = {
+        "spring.datasource.url=jdbc:h2:mem:room_auth_test_db;MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
+        "spring.datasource.driver-class-name=org.h2.Driver",
+        "spring.datasource.username=sa",
+        "spring.datasource.password=",
+        "spring.flyway.enabled=true",
+        "spring.flyway.baseline-on-migrate=true",
+        "spring.flyway.baseline-version=0",
+        "spring.jpa.hibernate.ddl-auto=validate",
         "jwt.secret=integration-test-secret-key-1234567890",
         "spring.mail.host=localhost",
         "spring.mail.port=2525",
-        "spring.jpa.hibernate.ddl-auto=create-drop",
         "checkinn.inventory.seed-enabled=false"
 })
 @AutoConfigureMockMvc
-@Testcontainers
 class RoomAuthorizationIntegrationTest {
-
-    // Temporary PostgreSQL database
-    @Container
-    static PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("postgres:17-alpine");
-
-    // Connect Spring Boot to Testcontainers PostgreSQL
-    @DynamicPropertySource
-    static void databaseProperties(
-            DynamicPropertyRegistry registry
-    ) {
-        registry.add(
-                "spring.datasource.url",
-                postgres::getJdbcUrl
-        );
-
-        registry.add(
-                "spring.datasource.username",
-                postgres::getUsername
-        );
-
-        registry.add(
-                "spring.datasource.password",
-                postgres::getPassword
-        );
-    }
 
     @Autowired
     private MockMvc mockMvc;

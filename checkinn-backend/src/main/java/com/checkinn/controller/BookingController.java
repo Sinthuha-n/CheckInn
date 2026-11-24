@@ -2,18 +2,18 @@ package com.checkinn.controller;
 
 import com.checkinn.dto.BookingRequest;
 import com.checkinn.dto.BookingResponse;
-import com.checkinn.service.BookingService;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 import com.checkinn.entity.Booking;
+import com.checkinn.service.BookingService;
 import com.checkinn.service.PdfService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/bookings")
@@ -21,6 +21,7 @@ import java.io.IOException;
 public class BookingController {
 
     private final BookingService bookingService;
+    private final PdfService pdfService;
 
     public BookingController(
             BookingService bookingService,
@@ -32,7 +33,7 @@ public class BookingController {
 
     @PostMapping
     public BookingResponse createBooking(
-            @RequestBody BookingRequest request,
+            @Valid @RequestBody BookingRequest request,
             Authentication authentication
     ) {
 
@@ -68,8 +69,6 @@ public class BookingController {
     public List<BookingResponse> getAllBookings() {
         return bookingService.getAllBookings();
     }
-
-    private final PdfService pdfService;
 
     @GetMapping("/{id}/ticket")
     public ResponseEntity<byte[]> downloadTicket(
