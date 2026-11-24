@@ -127,6 +127,7 @@ describe('room search helpers', () => {
     expect(
       parseRoomSearch(
         '?checkIn=2026-10-03&checkOut=2026-10-06&guests=3',
+        today,
       ),
     ).toEqual({
       checkIn: '2026-10-03',

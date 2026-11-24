@@ -96,7 +96,10 @@ export function serializeRoomSearch(values: RoomSearchParams) {
   }).toString()
 }
 
-export function parseRoomSearch(search: string): RoomSearchParams | null {
+export function parseRoomSearch(
+  search: string,
+  today = toLocalIsoDate(new Date()),
+): RoomSearchParams | null {
   const params = new URLSearchParams(search)
   const values: RoomSearchParams = {
     checkIn: params.get('checkIn') ?? '',
@@ -105,7 +108,7 @@ export function parseRoomSearch(search: string): RoomSearchParams | null {
     rooms: params.has('rooms') ? Number(params.get('rooms')) : MIN_ROOMS,
   }
 
-  return Object.keys(validateRoomSearch(values)).length === 0 ? values : null
+  return Object.keys(validateRoomSearch(values, today)).length === 0 ? values : null
 }
 
 export function getNumberOfNights(checkIn: string, checkOut: string) {

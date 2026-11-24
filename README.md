@@ -145,3 +145,19 @@ If you have an existing development database previously managed by Hibernate `dd
    npm run dev
    ```
    The frontend will be available at `http://localhost:5173`.
+
+## Continuous Integration (CI)
+
+A GitHub Actions workflow (`.github/workflows/ci.yml`) runs automated checks on pushes and pull requests to `main`:
+
+- **Backend CI**:
+  - Sets up Java 21 (Temurin) with Maven dependency caching.
+  - Runs unit and integration tests (`./mvnw test`).
+  - Packages the Spring Boot executable archive (`./mvnw package`).
+- **Frontend CI**:
+  - Sets up Node.js 20 with npm dependency caching.
+  - Installs clean dependencies with `npm ci`.
+  - Runs ESLint with zero-warning threshold (`npm run lint`).
+  - Runs TypeScript type checking (`npm run typecheck`).
+  - Runs unit and integration tests via Vitest (`npm test`).
+  - Validates production build output (`npm run build`).
