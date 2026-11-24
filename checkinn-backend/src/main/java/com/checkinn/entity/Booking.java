@@ -40,6 +40,10 @@ public class Booking {
         return id;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public LocalDate getCheckInDate() {
         return checkInDate;
     }

@@ -63,6 +63,7 @@ export interface BookingResponse {
 
 export interface ReviewRequest {
   roomId: number
+  bookingId?: number
   rating: number
   comment: string
 }
@@ -70,6 +71,7 @@ export interface ReviewRequest {
 export interface ReviewResponse {
   id: number
   roomId: number
+  bookingId?: number
   userName: string
   rating: number
   comment: string
