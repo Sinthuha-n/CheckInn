@@ -9,12 +9,7 @@ import com.checkinn.service.EmailNotificationClaimService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.CountDownLatch;
@@ -26,38 +21,20 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(properties = {
+        "spring.datasource.url=jdbc:h2:mem:email_claim_test_db;MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
+        "spring.datasource.driver-class-name=org.h2.Driver",
+        "spring.datasource.username=sa",
+        "spring.datasource.password=",
+        "spring.flyway.enabled=true",
+        "spring.flyway.baseline-on-migrate=true",
+        "spring.flyway.baseline-version=0",
+        "spring.jpa.hibernate.ddl-auto=validate",
         "jwt.secret=integration-test-secret-key-1234567890",
         "spring.mail.host=localhost",
         "spring.mail.port=2525",
-        "spring.jpa.hibernate.ddl-auto=create-drop",
         "checkinn.inventory.seed-enabled=false"
 })
-@Testcontainers
 class EmailClaimIntegrationTest {
-
-    @Container
-    static PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("postgres:17-alpine");
-
-    @DynamicPropertySource
-    static void databaseProperties(
-            DynamicPropertyRegistry registry
-    ) {
-        registry.add(
-                "spring.datasource.url",
-                postgres::getJdbcUrl
-        );
-
-        registry.add(
-                "spring.datasource.username",
-                postgres::getUsername
-        );
-
-        registry.add(
-                "spring.datasource.password",
-                postgres::getPassword
-        );
-    }
 
     @Autowired
     private EmailNotificationRepository notificationRepository;
