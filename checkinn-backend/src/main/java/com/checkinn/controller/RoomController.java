@@ -1,7 +1,9 @@
 package com.checkinn.controller;
 
-import com.checkinn.entity.Room;
+import com.checkinn.dto.RoomRequest;
+import com.checkinn.dto.RoomResponse;
 import com.checkinn.service.RoomService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -20,25 +22,26 @@ public class RoomController {
     }
 
     @PostMapping
-    public Room createRoom(@RequestBody Room room) {
-        return roomService.createRoom(room);
+    public RoomResponse createRoom(@Valid @RequestBody RoomRequest request) {
+        return roomService.createRoom(request);
     }
 
     @GetMapping
-    public List<Room> getAllRooms() {
+    public List<RoomResponse> getAllRooms() {
         return roomService.getAllRooms();
     }
 
     @GetMapping("/{id}")
-    public Room getRoomById(@PathVariable Long id) {
+    public RoomResponse getRoomById(@PathVariable Long id) {
         return roomService.getRoomById(id);
     }
 
     @PutMapping("/{id}")
-    public Room updateRoom(
+    public RoomResponse updateRoom(
             @PathVariable Long id,
-            @RequestBody Room room) {
-        return roomService.updateRoom(id, room);
+            @Valid @RequestBody RoomRequest request
+    ) {
+        return roomService.updateRoom(id, request);
     }
 
     @DeleteMapping("/{id}")
@@ -47,7 +50,7 @@ public class RoomController {
     }
 
     @GetMapping("/available")
-    public List<Room> getAvailableRooms(
+    public List<RoomResponse> getAvailableRooms(
             @RequestParam LocalDate checkIn,
             @RequestParam LocalDate checkOut
     ) {
@@ -58,7 +61,7 @@ public class RoomController {
     }
 
     @GetMapping("/search")
-    public List<Room> searchRooms(
+    public List<RoomResponse> searchRooms(
             @RequestParam(required = false) String roomType,
             @RequestParam(required = false) Integer capacity,
             @RequestParam(required = false) BigDecimal maxPrice
