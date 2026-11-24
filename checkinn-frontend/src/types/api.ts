@@ -1,6 +1,6 @@
 export type Role = 'USER' | 'ADMIN'
 
-export type BookingStatus = 'CONFIRMED' | 'CANCELLED'
+export type BookingStatus = 'CONFIRMED' | 'CANCELLED' | 'COMPLETED'
 
 export interface RegisterRequest {
   name: string
