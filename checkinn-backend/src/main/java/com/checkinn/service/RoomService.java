@@ -1,12 +1,17 @@
 package com.checkinn.service;
 
+import com.checkinn.dto.RoomRequest;
+import com.checkinn.dto.RoomResponse;
 import com.checkinn.entity.Room;
+import com.checkinn.exception.BadRequestException;
+import com.checkinn.exception.ResourceNotFoundException;
 import com.checkinn.repository.RoomRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class RoomService {
@@ -17,57 +22,66 @@ public class RoomService {
         this.roomRepository = roomRepository;
     }
 
-    public Room createRoom(Room room) {
-        return roomRepository.save(room);
+    public RoomResponse createRoom(RoomRequest request) {
+        Room room = toEntity(request);
+        Room saved = roomRepository.save(room);
+        return RoomResponse.fromEntity(saved);
     }
 
-    public List<Room> getAllRooms() {
-        return roomRepository.findAll();
+    public List<RoomResponse> getAllRooms() {
+        return roomRepository.findAll().stream()
+                .map(RoomResponse::fromEntity)
+                .toList();
     }
 
-    public Room getRoomById(Long id) {
+    public RoomResponse getRoomById(Long id) {
+        return RoomResponse.fromEntity(findRoomEntityById(id));
+    }
+
+    public Room findRoomEntityById(Long id) {
         return roomRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Room not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Room not found"));
     }
 
-    public Room updateRoom(Long id, Room updatedRoom) {
-        Room room = getRoomById(id);
+    public RoomResponse updateRoom(Long id, RoomRequest request) {
+        Room room = findRoomEntityById(id);
 
-        room.setRoomNumber(updatedRoom.getRoomNumber());
-        room.setRoomType(updatedRoom.getRoomType());
-        room.setDescription(updatedRoom.getDescription());
-        room.setPricePerNight(updatedRoom.getPricePerNight());
-        room.setCapacity(updatedRoom.getCapacity());
-        room.setAvailable(updatedRoom.getAvailable());
-        room.setBedConfiguration(updatedRoom.getBedConfiguration());
-        room.setAmenities(updatedRoom.getAmenities());
+        room.setRoomNumber(request.getRoomNumber());
+        room.setRoomType(request.getRoomType());
+        room.setDescription(request.getDescription());
+        room.setPricePerNight(request.getPricePerNight());
+        room.setCapacity(request.getCapacity());
+        room.setAvailable(request.getAvailable());
+        room.setBedConfiguration(request.getBedConfiguration());
+        room.setAmenities(request.getAmenities());
 
-        return roomRepository.save(room);
+        Room saved = roomRepository.save(room);
+        return RoomResponse.fromEntity(saved);
     }
 
     public void deleteRoom(Long id) {
         roomRepository.deleteById(id);
     }
 
-    public List<Room> getAvailableRooms(
+    public List<RoomResponse> getAvailableRooms(
             LocalDate checkIn,
             LocalDate checkOut
     ) {
 
         if (checkIn == null || checkOut == null) {
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Check-in and check-out dates are required"
             );
         }
 
         if (!checkOut.isAfter(checkIn)) {
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Check-out date must be after check-in date"
             );
         }
 
         if (checkIn.isBefore(LocalDate.now())) {
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Check-in date cannot be in the past"
             );
         }
@@ -75,17 +89,19 @@ public class RoomService {
         return roomRepository.findAvailableRooms(
                 checkIn,
                 checkOut
-        );
+        ).stream()
+                .map(RoomResponse::fromEntity)
+                .toList();
     }
 
-    public List<Room> searchRooms(
+    public List<RoomResponse> searchRooms(
             String roomType,
             Integer capacity,
             BigDecimal maxPrice
     ) {
 
         if (capacity != null && capacity <= 0) {
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Capacity must be greater than zero"
             );
         }
@@ -93,7 +109,7 @@ public class RoomService {
         if (maxPrice != null &&
                 maxPrice.compareTo(BigDecimal.ZERO) <= 0) {
 
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Maximum price must be greater than zero"
             );
         }
@@ -102,6 +118,23 @@ public class RoomService {
                 roomType,
                 capacity,
                 maxPrice
-        );
+        ).stream()
+                .map(RoomResponse::fromEntity)
+                .toList();
+    }
+
+    private Room toEntity(RoomRequest request) {
+        Room room = new Room();
+        room.setRoomNumber(request.getRoomNumber());
+        room.setRoomType(request.getRoomType());
+        room.setDescription(request.getDescription());
+        room.setPricePerNight(request.getPricePerNight());
+        room.setCapacity(request.getCapacity());
+        room.setAvailable(request.getAvailable());
+        room.setBedConfiguration(request.getBedConfiguration());
+        room.setAmenities(request.getAmenities() != null
+                ? new ArrayList<>(request.getAmenities())
+                : new ArrayList<>());
+        return room;
     }
 }
