@@ -23,6 +23,7 @@ The system allows users to browse available rooms, register and log in, make roo
 
 ### Database
 - PostgreSQL / Supabase
+- Flyway (Schema Migrations)
 
 ## Project Architecture
 
@@ -62,6 +63,36 @@ The application uses environment variables for sensitive credentials and environ
 > Never commit `.env` files or secrets to version control. The `.gitignore` file is configured to exclude environment files, certificates, credentials, and editor-specific directories.
 
 ## Getting Started
+
+### Database & Schema Management
+
+CheckInn manages its database schema using **Flyway migrations** (`db/migration/`) and uses Hibernate in **validate** mode (`spring.jpa.hibernate.ddl-auto=validate`). This guarantees reliable, version-controlled schema evolution across environments without unexpected runtime schema alterations.
+
+#### Flyway Migrations
+- `V1__initial_schema.sql`: Establishes the baseline relational schema including `users`, `rooms`, `room_amenities`, `bookings`, `reviews`, and `email_notifications` tables with primary keys, foreign keys, and unique constraints.
+- `V2__add_performance_indexes.sql`: Adds targeted composite and lookup indexes for booking overlap checks, room availability and filtering, review lookups, and email retry scheduler processing.
+
+#### Initializing a Fresh Database
+1. Create an empty PostgreSQL database (e.g. `checkinn_db`):
+   ```sql
+   CREATE DATABASE checkinn_db;
+   ```
+2. Configure `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD` in your `.env` or environment.
+3. Start the application:
+   ```bash
+   ./mvnw spring-boot:run
+   ```
+   Flyway will automatically detect the clean database, execute all migrations in order (`V1`, `V2`), and populate the `flyway_schema_history` table. Hibernate will then validate the schema on startup.
+
+#### Existing Development Database Migration Path
+If you have an existing development database previously managed by Hibernate `ddl-auto=update`:
+- **Safe in-place migration**: Flyway is configured with `spring.flyway.baseline-on-migrate=true` and `spring.flyway.baseline-version=0`.
+- Migration scripts utilize `CREATE TABLE IF NOT EXISTS` and `CREATE INDEX IF NOT EXISTS`, ensuring that existing tables and user/booking data are safely preserved without data loss.
+- Alternatively, if you already have existing tables and want to mark the current schema baseline manually:
+  ```bash
+  # Flyway will baseline existing unversioned tables and apply subsequent migrations (V2+)
+  ./mvnw flyway:baseline -Dflyway.baselineVersion=1
+  ```
 
 ### Prerequisites
 - Java 21+
