@@ -14,6 +14,10 @@ export const bookingApi = {
     return apiRequest<BookingResponse[]>('/bookings/my', { token })
   },
 
+  all(token: string) {
+    return apiRequest<BookingResponse[]>('/bookings', { token })
+  },
+
   cancel(bookingId: number, token: string) {
     return apiRequest<BookingResponse>(`/bookings/${bookingId}/cancel`, {
       method: 'PUT',
