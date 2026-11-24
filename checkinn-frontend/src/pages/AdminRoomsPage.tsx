@@ -8,6 +8,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { NavLink } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { Container } from '../components/ui/Container'
 import { RoomFormModal } from '../features/admin/components/RoomFormModal'
@@ -192,6 +193,27 @@ export function AdminRoomsPage() {
   return (
     <section className="admin-page" aria-labelledby="admin-rooms-title">
       <Container>
+        {/* ── Admin Subnav ── */}
+        <nav className="admin-nav" aria-label="Admin sections">
+          <NavLink
+            className={({ isActive }) =>
+              `admin-nav__link ${isActive ? 'admin-nav__link--active' : ''}`
+            }
+            to="/admin"
+            end
+          >
+            Room inventory
+          </NavLink>
+          <NavLink
+            className={({ isActive }) =>
+              `admin-nav__link ${isActive ? 'admin-nav__link--active' : ''}`
+            }
+            to="/admin/bookings"
+          >
+            Guest bookings
+          </NavLink>
+        </nav>
+
         {/* ── Heading ── */}
         <div className="admin-heading">
           <div>

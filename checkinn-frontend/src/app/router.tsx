@@ -6,6 +6,7 @@ import {
   RoleRoute,
 } from '../features/auth/routeGuards'
 import { AdminRoomsPage } from '../pages/AdminRoomsPage'
+import { AdminBookingsPage } from '../pages/AdminBookingsPage'
 import { BookingConfirmationPage } from '../pages/BookingConfirmationPage'
 import { BookingPage } from '../pages/BookingPage'
 import { FindYourStayPage } from '../pages/FindYourStayPage'
@@ -62,6 +63,10 @@ export const appRoutes: RouteObject[] = [
               {
                 path: 'admin',
                 element: <AdminRoomsPage />,
+              },
+              {
+                path: 'admin/bookings',
+                element: <AdminBookingsPage />,
               },
             ],
           },
