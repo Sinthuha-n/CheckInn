@@ -38,14 +38,13 @@ export function AdminRoomsPage() {
   const [modal, setModal] = useState<ModalMode>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [actionError, setActionError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
 
   // ── Load rooms ──────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!session) return
 
     let active = true
-    setIsLoading(true)
-    setError('')
 
     adminRoomApi
       .list(session.token)
@@ -76,6 +75,8 @@ export function AdminRoomsPage() {
   }, [rooms])
 
   const retryInventory = () => {
+    setIsLoading(true)
+    setError('')
     setRequestKey(k => k + 1)
   }
 
@@ -89,9 +90,11 @@ export function AdminRoomsPage() {
     if (!session) return
     setIsSubmitting(true)
     setActionError('')
+    setSuccessMessage('')
     try {
       const created = await adminRoomApi.create(payload, session.token)
       setRooms(prev => [...prev, created])
+      setSuccessMessage(`Room ${created.roomNumber} has been created successfully.`)
       closeModal()
     } catch (caughtError) {
       setActionError(
@@ -110,9 +113,11 @@ export function AdminRoomsPage() {
     const roomId = modal.room.id
     setIsSubmitting(true)
     setActionError('')
+    setSuccessMessage('')
     try {
       const updated = await adminRoomApi.update(roomId, payload, session.token)
       setRooms(prev => prev.map(r => (r.id === updated.id ? updated : r)))
+      setSuccessMessage(`Room ${updated.roomNumber} has been updated successfully.`)
       closeModal()
     } catch (caughtError) {
       setActionError(
@@ -125,21 +130,59 @@ export function AdminRoomsPage() {
     }
   }
 
+  // ── Toggle Availability ──────────────────────────────────────────────────────
+  const handleToggleAvailability = async (room: Room) => {
+    if (!session) return
+    setIsSubmitting(true)
+    setActionError('')
+    setSuccessMessage('')
+    try {
+      const payload: RoomPayload = {
+        roomNumber: room.roomNumber,
+        roomType: room.roomType,
+        description: room.description,
+        pricePerNight: room.pricePerNight,
+        capacity: room.capacity,
+        available: !room.available,
+        bedConfiguration: room.bedConfiguration ?? '',
+        amenities: [...room.amenities],
+      }
+      const updated = await adminRoomApi.update(room.id, payload, session.token)
+      setRooms(prev => prev.map(r => (r.id === updated.id ? updated : r)))
+      setSuccessMessage(
+        `Room ${room.roomNumber} is now ${updated.available ? 'available' : 'unavailable'}.`,
+      )
+      if (modal?.type === 'delete') {
+        closeModal()
+      }
+    } catch (caughtError) {
+      setActionError(
+        caughtError instanceof ApiError
+          ? caughtError.message
+          : 'Could not update room availability. Please try again.',
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   // ── Delete ──────────────────────────────────────────────────────────────────
   const handleDelete = async () => {
     if (!session || modal?.type !== 'delete') return
     const roomId = modal.room.id
     setIsSubmitting(true)
     setActionError('')
+    setSuccessMessage('')
     try {
       await adminRoomApi.deleteRoom(roomId, session.token)
       setRooms(prev => prev.filter(r => r.id !== roomId))
+      setSuccessMessage(`Room ${modal.room.roomNumber} has been deleted.`)
       closeModal()
     } catch (caughtError) {
       setActionError(
         caughtError instanceof ApiError
           ? caughtError.message
-          : 'The room could not be deleted. Please try again.',
+          : 'The room could not be deleted (it may have active bookings or reviews). You can disable it instead.',
       )
     } finally {
       setIsSubmitting(false)
@@ -155,16 +198,30 @@ export function AdminRoomsPage() {
             <p className="eyebrow eyebrow--dark">Operations desk</p>
             <h1 id="admin-rooms-title">Room inventory</h1>
           </div>
-          <Button onClick={() => setModal({ type: 'create' })} size="large">
+          <Button onClick={() => { setSuccessMessage(''); setModal({ type: 'create' }); }} size="large">
             <Plus aria-hidden="true" size={18} />
             Add room
           </Button>
         </div>
 
+        {/* ── Success notification ── */}
+        {successMessage ? (
+          <p className="form-notice form-notice--success" role="status">
+            {successMessage}
+          </p>
+        ) : null}
+
+        {/* ── Action error banner outside modal ── */}
+        {actionError && !modal ? (
+          <p className="form-notice form-notice--error" role="alert">
+            {actionError}
+          </p>
+        ) : null}
+
         {/* ── Summary stats ── */}
         {!isLoading && !error ? (
           <dl
-            aria-label={`${summary.total} total, ${summary.available} available, ${summary.unavailable} unavailable`}
+            aria-label={`${summary.total} total rooms, ${summary.available} available, ${summary.unavailable} unavailable`}
             className="admin-summary"
           >
             <div><dt>Total rooms</dt><dd>{summary.total}</dd></div>
@@ -198,7 +255,7 @@ export function AdminRoomsPage() {
             <BedDouble aria-hidden="true" size={26} />
             <h2>No rooms configured.</h2>
             <p>Rooms will appear here when they are added to CheckInn.</p>
-            <Button onClick={() => setModal({ type: 'create' })}>
+            <Button onClick={() => { setSuccessMessage(''); setModal({ type: 'create' }); }}>
               <Plus aria-hidden="true" size={17} />
               Add the first room
             </Button>
@@ -248,9 +305,19 @@ export function AdminRoomsPage() {
                     </td>
                     <td data-label="Actions" className="admin-table__actions">
                       <button
+                        aria-label={`${room.available ? 'Disable' : 'Enable'} room ${room.roomNumber}`}
+                        className={`admin-action-btn ${room.available ? 'admin-action-btn--disable' : 'admin-action-btn--enable'}`}
+                        disabled={isSubmitting}
+                        onClick={() => handleToggleAvailability(room)}
+                        type="button"
+                      >
+                        {room.available ? 'Disable' : 'Enable'}
+                      </button>
+                      <button
                         aria-label={`Edit room ${room.roomNumber}`}
                         className="admin-action-btn admin-action-btn--edit"
-                        onClick={() => setModal({ type: 'edit', room })}
+                        disabled={isSubmitting}
+                        onClick={() => { setSuccessMessage(''); setModal({ type: 'edit', room }); }}
                         type="button"
                       >
                         <Pencil aria-hidden="true" size={15} />
@@ -259,7 +326,8 @@ export function AdminRoomsPage() {
                       <button
                         aria-label={`Delete room ${room.roomNumber}`}
                         className="admin-action-btn admin-action-btn--delete"
-                        onClick={() => setModal({ type: 'delete', room })}
+                        disabled={isSubmitting}
+                        onClick={() => { setSuccessMessage(''); setModal({ type: 'delete', room }); }}
                         type="button"
                       >
                         <Trash2 aria-hidden="true" size={15} />
@@ -333,6 +401,14 @@ export function AdminRoomsPage() {
                 variant="secondary"
               >
                 Cancel
+              </Button>
+              <Button
+                disabled={isSubmitting}
+                onClick={() => handleToggleAvailability(modal.room)}
+                type="button"
+                variant="secondary"
+              >
+                {modal.room.available ? 'Disable instead' : 'Keep unavailable'}
               </Button>
               <Button
                 className="button--danger"

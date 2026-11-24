@@ -116,4 +116,212 @@ describe('admin room inventory', () => {
     expect(await screen.findByRole('heading', { name: /reserved for the team/i })).toBeInTheDocument()
     expect(fetch).not.toHaveBeenCalled()
   })
+
+  it('opens the create modal, validates required fields, and creates a new room', async () => {
+    const user = userEvent.setup()
+    const session = createSession('ADMIN')
+    authStorage.write(session)
+
+    const newRoom: Room = {
+      id: 3,
+      roomNumber: '303',
+      roomType: 'Deluxe Room',
+      description: 'A sunny deluxe room on the third floor.',
+      pricePerNight: 28000,
+      capacity: 2,
+      available: true,
+      bedConfiguration: '1 King Bed',
+      amenities: ['Wi-Fi'],
+    }
+
+    vi.mocked(fetch).mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      if (url === '/api/rooms' && (!init || init.method === 'GET' || !init.method)) {
+        return Promise.resolve(jsonResponse(rooms))
+      }
+      if (url === '/api/rooms' && init?.method === 'POST') {
+        return Promise.resolve(jsonResponse(newRoom))
+      }
+      throw new Error(`Unexpected request: ${url}`)
+    })
+
+    renderApp('/admin')
+    expect(await screen.findByRole('cell', { name: '101' })).toBeInTheDocument()
+
+    // Open add room modal
+    await user.click(screen.getByRole('button', { name: /add room/i }))
+    expect(await screen.findByRole('heading', { name: 'Add a new room' })).toBeInTheDocument()
+
+    // Trigger validation
+    await user.click(screen.getByRole('button', { name: 'Create room' }))
+    expect(await screen.findByText('Room number is required')).toBeInTheDocument()
+    expect(screen.getByText('Room type is required')).toBeInTheDocument()
+    expect(screen.getByText('Description is required')).toBeInTheDocument()
+    expect(screen.getByText('Price must be greater than 0')).toBeInTheDocument()
+
+    // Fill valid fields
+    await user.type(screen.getByLabelText(/room number/i), '303')
+    await user.selectOptions(screen.getByLabelText(/room type/i), 'Deluxe Room')
+    await user.type(screen.getByLabelText(/description/i), 'A sunny deluxe room on the third floor.')
+    await user.type(screen.getByLabelText(/price per night/i), '28000')
+    await user.clear(screen.getByLabelText(/capacity/i))
+    await user.type(screen.getByLabelText(/capacity/i), '2')
+
+    // Submit form
+    await user.click(screen.getByRole('button', { name: 'Create room' }))
+
+    // Expect POST was called
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/rooms',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.stringContaining('"roomNumber":"303"'),
+      }),
+    )
+
+    // Modal closes and success message shows
+    expect(await screen.findByText(/room 303 has been created successfully/i)).toBeInTheDocument()
+    expect(screen.getByRole('cell', { name: '303' })).toBeInTheDocument()
+  })
+
+  it('opens the edit modal with populated room data and updates the room', async () => {
+    const user = userEvent.setup()
+    const session = createSession('ADMIN')
+    authStorage.write(session)
+
+    const updatedRoom: Room = {
+      ...rooms[0],
+      pricePerNight: 26000,
+      description: 'An updated quiet courtyard room.',
+    }
+
+    vi.mocked(fetch).mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      if (url === '/api/rooms') return Promise.resolve(jsonResponse(rooms))
+      if (url === '/api/rooms/1' && init?.method === 'PUT') {
+        return Promise.resolve(jsonResponse(updatedRoom))
+      }
+      throw new Error(`Unexpected request: ${url}`)
+    })
+
+    renderApp('/admin')
+    expect(await screen.findByRole('cell', { name: '101' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Edit room 101' }))
+    expect(await screen.findByRole('heading', { name: 'Edit room' })).toBeInTheDocument()
+    expect(screen.getByLabelText(/room number/i)).toHaveValue('101')
+
+    await user.clear(screen.getByLabelText(/price per night/i))
+    await user.type(screen.getByLabelText(/price per night/i), '26000')
+
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/rooms/1',
+      expect.objectContaining({
+        method: 'PUT',
+        body: expect.stringContaining('"pricePerNight":26000'),
+      }),
+    )
+
+    expect(await screen.findByText(/room 101 has been updated successfully/i)).toBeInTheDocument()
+    expect(screen.getByRole('cell', { name: /26,000/ })).toBeInTheDocument()
+  })
+
+  it('toggles availability of a room directly from the inventory table', async () => {
+    const user = userEvent.setup()
+    const session = createSession('ADMIN')
+    authStorage.write(session)
+
+    const toggledRoom: Room = {
+      ...rooms[0],
+      available: false,
+    }
+
+    vi.mocked(fetch).mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      if (url === '/api/rooms') return Promise.resolve(jsonResponse(rooms))
+      if (url === '/api/rooms/1' && init?.method === 'PUT') {
+        return Promise.resolve(jsonResponse(toggledRoom))
+      }
+      throw new Error(`Unexpected request: ${url}`)
+    })
+
+    renderApp('/admin')
+    expect(await screen.findByRole('cell', { name: '101' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Disable room 101' }))
+
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/rooms/1',
+      expect.objectContaining({
+        method: 'PUT',
+        body: expect.stringContaining('"available":false'),
+      }),
+    )
+
+    expect(await screen.findByText(/room 101 is now unavailable/i)).toBeInTheDocument()
+  })
+
+  it('opens delete confirmation and deletes a room', async () => {
+    const user = userEvent.setup()
+    const session = createSession('ADMIN')
+    authStorage.write(session)
+
+    vi.mocked(fetch).mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      if (url === '/api/rooms') return Promise.resolve(jsonResponse(rooms))
+      if (url === '/api/rooms/1' && init?.method === 'DELETE') {
+        return Promise.resolve(new Response(null, { status: 204 }))
+      }
+      throw new Error(`Unexpected request: ${url}`)
+    })
+
+    renderApp('/admin')
+    expect(await screen.findByRole('cell', { name: '101' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Delete room 101' }))
+    expect(await screen.findByRole('heading', { name: 'Delete room 101?' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Yes, delete room' }))
+
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/rooms/1',
+      expect.objectContaining({ method: 'DELETE' }),
+    )
+
+    expect(await screen.findByText(/room 101 has been deleted/i)).toBeInTheDocument()
+    expect(screen.queryByRole('cell', { name: '101' })).not.toBeInTheDocument()
+  })
+
+  it('handles backend creation errors gracefully by showing the error message in the modal', async () => {
+    const user = userEvent.setup()
+    const session = createSession('ADMIN')
+    authStorage.write(session)
+
+    vi.mocked(fetch).mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      if (url === '/api/rooms' && (!init || init.method === 'GET' || !init.method)) {
+        return Promise.resolve(jsonResponse(rooms))
+      }
+      if (url === '/api/rooms' && init?.method === 'POST') {
+        return Promise.resolve(jsonResponse({ message: 'Room number 101 already exists' }, 409))
+      }
+      throw new Error(`Unexpected request: ${url}`)
+    })
+
+    renderApp('/admin')
+    expect(await screen.findByRole('cell', { name: '101' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /add room/i }))
+    await user.type(screen.getByLabelText(/room number/i), '101')
+    await user.selectOptions(screen.getByLabelText(/room type/i), 'Deluxe Room')
+    await user.type(screen.getByLabelText(/description/i), 'Duplicate room')
+    await user.type(screen.getByLabelText(/price per night/i), '20000')
+
+    await user.click(screen.getByRole('button', { name: 'Create room' }))
+
+    expect(await screen.findByText('Room number 101 already exists')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Add a new room' })).toBeInTheDocument()
+  })
 })
