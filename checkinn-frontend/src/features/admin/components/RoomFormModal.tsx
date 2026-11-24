@@ -65,7 +65,9 @@ export function RoomFormModal({ room, isSubmitting, onSubmit, onClose, children 
 
   // Open native dialog + focus first field
   useEffect(() => {
-    dialogRef.current?.showModal()
+    if (typeof dialogRef.current?.showModal === 'function') {
+      dialogRef.current.showModal()
+    }
     firstInputRef.current?.focus()
   }, [])
 
@@ -126,7 +128,7 @@ export function RoomFormModal({ room, isSubmitting, onSubmit, onClose, children 
     if (!form.roomNumber.trim()) next.roomNumber = 'Room number is required'
     if (!form.roomType.trim()) next.roomType = 'Room type is required'
     if (!form.description.trim()) next.description = 'Description is required'
-    if (!form.pricePerNight || form.pricePerNight <= 0) next.pricePerNight = 'Enter a valid price'
+    if (!form.pricePerNight || form.pricePerNight <= 0) next.pricePerNight = 'Price must be greater than 0'
     if (!form.capacity || form.capacity < 1) next.capacity = 'Capacity must be at least 1'
     setErrors(next)
     return Object.keys(next).length === 0
@@ -147,6 +149,7 @@ export function RoomFormModal({ room, isSubmitting, onSubmit, onClose, children 
     <dialog
       className="room-modal"
       ref={dialogRef}
+      open
       onClick={handleBackdropClick}
       aria-labelledby="room-modal-title"
       aria-modal="true"
