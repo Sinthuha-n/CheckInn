@@ -1,12 +1,11 @@
-
 package com.checkinn.service;
 
 import com.checkinn.entity.Booking;
 import com.checkinn.entity.EmailNotification;
 import com.checkinn.enums.EmailStatus;
+import com.checkinn.exception.ResourceNotFoundException;
 import com.checkinn.repository.BookingRepository;
 import com.checkinn.repository.EmailNotificationRepository;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -53,7 +52,7 @@ public class EmailDeliveryService {
         EmailNotification notification =
                 notificationRepository.findByBookingId(bookingId)
                         .orElseThrow(() ->
-                                new IllegalStateException(
+                                new ResourceNotFoundException(
                                         "Notification not found: " + bookingId
                                 )
                         );
@@ -63,7 +62,7 @@ public class EmailDeliveryService {
         try {
             booking = bookingRepository.findById(bookingId)
                     .orElseThrow(() ->
-                            new IllegalStateException(
+                            new ResourceNotFoundException(
                                     "Booking not found: " + bookingId
                             )
                     );

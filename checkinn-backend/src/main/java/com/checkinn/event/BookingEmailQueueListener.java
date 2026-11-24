@@ -1,12 +1,11 @@
-
 package com.checkinn.event;
 
 import com.checkinn.entity.Booking;
 import com.checkinn.entity.EmailNotification;
 import com.checkinn.enums.EmailStatus;
+import com.checkinn.exception.ResourceNotFoundException;
 import com.checkinn.repository.BookingRepository;
 import com.checkinn.repository.EmailNotificationRepository;
-
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -44,7 +43,7 @@ public class BookingEmailQueueListener {
         Booking booking = bookingRepository
                 .findById(event.bookingId())
                 .orElseThrow(() ->
-                        new IllegalStateException(
+                        new ResourceNotFoundException(
                                 "Booking not found: "
                                         + event.bookingId()
                         )

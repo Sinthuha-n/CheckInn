@@ -3,6 +3,8 @@ package com.checkinn;
 import com.checkinn.dto.RoomRequest;
 import com.checkinn.dto.RoomResponse;
 import com.checkinn.entity.Room;
+import com.checkinn.exception.BadRequestException;
+import com.checkinn.exception.ResourceNotFoundException;
 import com.checkinn.repository.RoomRepository;
 import com.checkinn.service.RoomService;
 import org.junit.jupiter.api.Test;
@@ -108,6 +110,19 @@ class RoomServiceTest {
     }
 
     @Test
+    void getRoomByIdThrowsResourceNotFoundExceptionWhenMissing() {
+        RoomRepository repository = mock(RoomRepository.class);
+        RoomService service = new RoomService(repository);
+        when(repository.findById(99L)).thenReturn(Optional.empty());
+
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
+                () -> service.getRoomById(99L)
+        );
+        assertEquals("Room not found", ex.getMessage());
+    }
+
+    @Test
     void getAllRoomsReturnsListOfRoomResponses() {
         RoomRepository repository = mock(RoomRepository.class);
         RoomService service = new RoomService(repository);
@@ -124,13 +139,50 @@ class RoomServiceTest {
     }
 
     @Test
-    void deleteRoomCallsRepository() {
+    void deleteRoomCallsRepositoryWhenExists() {
         RoomRepository repository = mock(RoomRepository.class);
         RoomService service = new RoomService(repository);
+        when(repository.existsById(3L)).thenReturn(true);
 
         service.deleteRoom(3L);
 
         verify(repository).deleteById(3L);
+    }
+
+    @Test
+    void deleteRoomThrowsResourceNotFoundExceptionWhenMissing() {
+        RoomRepository repository = mock(RoomRepository.class);
+        RoomService service = new RoomService(repository);
+        when(repository.existsById(99L)).thenReturn(false);
+
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
+                () -> service.deleteRoom(99L)
+        );
+        assertEquals("Room not found", ex.getMessage());
+        verify(repository, never()).deleteById(anyLong());
+    }
+
+    @Test
+    void getAvailableRoomsValidatesDates() {
+        RoomRepository repository = mock(RoomRepository.class);
+        RoomService service = new RoomService(repository);
+
+        assertThrows(BadRequestException.class, () -> service.getAvailableRooms(null, LocalDate.now().plusDays(2)));
+        assertThrows(BadRequestException.class, () -> service.getAvailableRooms(LocalDate.now().plusDays(2), null));
+        assertThrows(BadRequestException.class, () -> service.getAvailableRooms(LocalDate.now().plusDays(3), LocalDate.now().plusDays(2)));
+        assertThrows(BadRequestException.class, () -> service.getAvailableRooms(LocalDate.now().minusDays(1), LocalDate.now().plusDays(2)));
+    }
+
+    @Test
+    void searchRoomsValidatesParameters() {
+        RoomRepository repository = mock(RoomRepository.class);
+        RoomService service = new RoomService(repository);
+
+        assertThrows(BadRequestException.class, () -> service.searchRooms("Deluxe", 0, new BigDecimal("10000")));
+        assertThrows(BadRequestException.class, () -> service.searchRooms("Deluxe", -1, new BigDecimal("10000")));
+        assertThrows(BadRequestException.class, () -> service.searchRooms("Deluxe", 2, BigDecimal.ZERO));
+        assertThrows(BadRequestException.class, () -> service.searchRooms("Deluxe", 2, new BigDecimal("-500")));
     }
 
     private static Room room(String roomNumber, String roomType) {

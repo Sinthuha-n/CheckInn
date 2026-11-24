@@ -2,6 +2,7 @@ package com.checkinn.config;
 
 import com.checkinn.entity.User;
 import com.checkinn.enums.Role;
+import com.checkinn.exception.ResourceNotFoundException;
 import com.checkinn.repository.UserRepository;
 import com.checkinn.service.JwtService;
 import jakarta.servlet.FilterChain;
@@ -55,7 +56,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
                 User user = userRepository.findByEmail(email)
                         .orElseThrow(() ->
-                                new RuntimeException("User not found")
+                                new ResourceNotFoundException("User not found")
                         );
 
                 Role role = user.getRole();

@@ -16,7 +16,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleNotFound(
             ResourceNotFoundException ex
     ) {
-
         Map<String, String> response = new HashMap<>();
         response.put("message", ex.getMessage());
 
@@ -29,7 +28,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleConflict(
             ConflictException ex
     ) {
-
         Map<String, String> response = new HashMap<>();
         response.put("message", ex.getMessage());
 
@@ -42,7 +40,30 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleBadRequest(
             BadRequestException ex
     ) {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", ex.getMessage());
 
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<Map<String, String>> handleForbidden(
+            ForbiddenException ex
+    ) {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(response);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgument(
+            IllegalArgumentException ex
+    ) {
         Map<String, String> response = new HashMap<>();
         response.put("message", ex.getMessage());
 
@@ -55,7 +76,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleValidationErrors(
             MethodArgumentNotValidException ex
     ) {
-
         Map<String, String> errors = new HashMap<>();
 
         ex.getBindingResult()
@@ -72,16 +92,17 @@ public class GlobalExceptionHandler {
                 .body(errors);
     }
 
-    @ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity<Map<String, String>> handleForbidden(
-            ForbiddenException ex
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, String>> handleGeneralException(
+            Exception ex
     ) {
-
         Map<String, String> response = new HashMap<>();
-        response.put("message", ex.getMessage());
+        response.put("message", ex.getMessage() != null && !ex.getMessage().isBlank()
+                ? ex.getMessage()
+                : "An unexpected error occurred");
 
         return ResponseEntity
-                .status(HttpStatus.FORBIDDEN)
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(response);
     }
 }
